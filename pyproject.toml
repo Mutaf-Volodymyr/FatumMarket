@@ -1,0 +1,29 @@
+[project]
+name = "fatummarket"
+version = "0.1.0"
+description = "FatumMarket Backend API"
+requires-python = ">=3.13"
+dependencies = [
+    "Django==5.0.0",
+    "djangorestframework==3.14.0",
+    "python-dotenv==1.0.0",
+    "django-cors-headers==4.3.1",
+    "django-filter==23.5",
+    "psycopg2-binary>=2.9.10",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.0.0",
+    "isort>=5.13.0",
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py313']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
