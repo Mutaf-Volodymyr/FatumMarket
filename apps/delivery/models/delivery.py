@@ -21,10 +21,21 @@ class Delivery(BaseModel):
         FULL = 'full', _('Полный')
         PARTIAL = 'partial', _('Частичный')
 
-    # кто - что
-    # order = models.ForeignKey('Order', on_delete=models.PROTECT, verbose_name=_('Заказ'))
-    order_id =5
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name=_('Клиент'))
+
+    order = models.OneToOneField(
+        'orders.Order',
+        on_delete=models.PROTECT,
+        verbose_name=_('Заказ'),
+        related_name='delivery',
+    )
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        verbose_name=_('Получатель'),
+        null=True,
+        blank=True,
+    )
+    unknown_recipient = models.TextField(null=True, blank=True, verbose_name=_("Неизвестный получатель"))
 
     # куда
     delivery_type = models.CharField(max_length=100, choices=DeliveryTypeChoices.choices, default=DeliveryTypeChoices.pickup, verbose_name=_('Способ доставки'),)
@@ -61,11 +72,11 @@ class Delivery(BaseModel):
     class Meta:
         verbose_name = _("Доставка")
         verbose_name_plural = _('Доставки')
-        db_table = "Delivery"
+        db_table = "delivery"
 
     def __str__(self):
         is_delivered = "+" if self.is_delivered else '-'
-        return f"[{self.order_id}] to {self.user} | {self.delivery_type}"
+        return f"[{self.order_id}] to {self.user} | {self.delivery_type}  | {is_delivered}"
 
 
     def _get_old_model(self):

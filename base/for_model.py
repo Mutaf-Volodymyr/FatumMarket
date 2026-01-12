@@ -5,8 +5,8 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 class BaseModel(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True, editable=False)
-    updated_at = models.DateTimeField(auto_now=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False, verbose_name=_('Создано'))
+    updated_at = models.DateTimeField(auto_now=True, editable=False, verbose_name=_('Обновлено'))
 
     history = HistoricalRecords(user_model='users.User')
 
@@ -18,6 +18,10 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
+
+    @classmethod
+    def get_fields_list(cls):
+        return [field.name for field in cls._meta.fields]
 
 
 class PriceField(models.DecimalField):

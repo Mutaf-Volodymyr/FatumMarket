@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.utils.translation import gettext_lazy as _
 from django_google_maps.fields import AddressField
 from django_google_maps.widgets import GoogleMapsAddressWidget
 
