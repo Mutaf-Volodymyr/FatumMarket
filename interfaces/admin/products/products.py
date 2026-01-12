@@ -56,7 +56,7 @@ class ProductAdmin(admin.ModelAdmin):
         'category',
         "brand",
         'is_active',
-        'qty',
+        'quantity',
         'price',
         'old_price',
         'discount',

@@ -11,7 +11,7 @@ __all__ = ['Order', 'OrderItem', 'OrderPayment']
 
 
 class Order(BaseModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name=_('Клиент'))
+    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name=_('Клиент'))
 
     class OrderStatus(models.TextChoices):
         DRAFT = 'draft', _("Черновик")
@@ -51,7 +51,7 @@ class Order(BaseModel):
         db_table = "orders"
 
     def __str__(self):
-        return f"{self.user.email} | {self.status}"
+        return f"{self.customer.email} | {self.status}"
 
 
 

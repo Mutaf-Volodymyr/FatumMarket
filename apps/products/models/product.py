@@ -22,7 +22,7 @@ class Product(BaseModel):
     description = models.TextField(null=True, blank=True, verbose_name=_('Описание'))
     is_active = models.BooleanField(default=False, verbose_name=_('Активно'))
     # количество
-    qty = models.PositiveIntegerField(
+    quantity = models.PositiveIntegerField(
         default=0,
         verbose_name=_('Количество'),
         help_text='Доступное для продажи',
