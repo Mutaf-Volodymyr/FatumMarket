@@ -1,0 +1,723 @@
+// Mobile menu toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const navbarToggle = document.getElementById('navbarToggle');
+    const navbarMenu = document.getElementById('navbarMenu');
+    
+    if (navbarToggle && navbarMenu) {
+        navbarToggle.addEventListener('click', function() {
+            navbarMenu.classList.toggle('active');
+        });
+    }
+    
+    // Categories and Brands dropdown toggle
+    const categoriesBrandsToggle = document.getElementById('categoriesBrandsToggle');
+    const categoriesBrandsDropdown = document.getElementById('categoriesBrandsDropdown');
+    
+    if (categoriesBrandsToggle && categoriesBrandsDropdown) {
+        categoriesBrandsToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            categoriesBrandsDropdown.classList.toggle('show');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!categoriesBrandsToggle.contains(e.target) && !categoriesBrandsDropdown.contains(e.target)) {
+                categoriesBrandsDropdown.classList.remove('show');
+            }
+        });
+    }
+    
+    // Product filters mobile toggle
+    const filtersToggleMobile = document.getElementById('filtersToggleMobile');
+    const filtersSidebar = document.getElementById('productsFiltersSidebar');
+    const filtersClose = document.getElementById('filtersClose');
+    
+    if (filtersToggleMobile && filtersSidebar) {
+        filtersToggleMobile.addEventListener('click', function() {
+            filtersSidebar.classList.add('show');
+        });
+        
+        if (filtersClose) {
+            filtersClose.addEventListener('click', function() {
+                filtersSidebar.classList.remove('show');
+            });
+        }
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768) {
+                if (filtersSidebar.classList.contains('show') && 
+                    !filtersSidebar.contains(e.target) && 
+                    !filtersToggleMobile.contains(e.target)) {
+                    filtersSidebar.classList.remove('show');
+                }
+            }
+        });
+    }
+    
+    // Dual range slider for price
+    const minPriceSlider = document.getElementById('min_price_slider');
+    const maxPriceSlider = document.getElementById('max_price_slider');
+    const minPriceInput = document.getElementById('min_price');
+    const maxPriceInput = document.getElementById('max_price');
+    const dualRangeWrapper = document.querySelector('.dual-range-wrapper');
+    
+    function updateDualRangeFill() {
+        if (!minPriceSlider || !maxPriceSlider || !dualRangeWrapper) return;
+        
+        const min = parseFloat(minPriceSlider.min);
+        const max = parseFloat(minPriceSlider.max);
+        const minVal = parseFloat(minPriceSlider.value);
+        const maxVal = parseFloat(maxPriceSlider.value);
+        
+        const percentMin = ((minVal - min) / (max - min)) * 100;
+        const percentMax = ((maxVal - min) / (max - min)) * 100;
+        
+        dualRangeWrapper.style.setProperty('--range-left', percentMin + '%');
+        dualRangeWrapper.style.setProperty('--range-right', (100 - percentMax) + '%');
+    }
+    
+    if (minPriceSlider && maxPriceSlider && minPriceInput && maxPriceInput) {
+        // Initialize
+        updateDualRangeFill();
+        
+        // Sync sliders with inputs
+        minPriceSlider.addEventListener('input', function() {
+            const minVal = parseFloat(this.value);
+            const maxVal = parseFloat(maxPriceSlider.value);
+            const minLimit = parseFloat(this.min);
+            
+            if (minVal >= minLimit) {
+                minPriceInput.value = Math.round(minVal);
+                
+                if (minVal > maxVal) {
+                    maxPriceSlider.value = minVal;
+                    maxPriceInput.value = Math.round(minVal);
+                }
+                
+                updateDualRangeFill();
+            }
+        });
+        
+        maxPriceSlider.addEventListener('input', function() {
+            const maxVal = parseFloat(this.value);
+            const minVal = parseFloat(minPriceSlider.value);
+            const maxLimit = parseFloat(this.max);
+            
+            if (maxVal <= maxLimit) {
+                maxPriceInput.value = Math.round(maxVal);
+                
+                if (maxVal < minVal) {
+                    minPriceSlider.value = maxVal;
+                    minPriceInput.value = Math.round(maxVal);
+                }
+                
+                updateDualRangeFill();
+            }
+        });
+        
+        // Sync inputs with sliders
+        minPriceInput.addEventListener('input', function() {
+            const value = parseFloat(this.value) || parseFloat(minPriceSlider.min);
+            const minLimit = parseFloat(minPriceSlider.min);
+            const maxLimit = parseFloat(maxPriceSlider.value);
+            
+            if (value >= minLimit && value <= maxLimit) {
+                minPriceSlider.value = value;
+                updateDualRangeFill();
+            } else if (value < minLimit) {
+                this.value = minLimit;
+                minPriceSlider.value = minLimit;
+                updateDualRangeFill();
+            } else if (value > maxLimit) {
+                this.value = maxLimit;
+                minPriceSlider.value = maxLimit;
+                updateDualRangeFill();
+            }
+        });
+        
+        maxPriceInput.addEventListener('input', function() {
+            const value = parseFloat(this.value) || parseFloat(maxPriceSlider.max);
+            const minLimit = parseFloat(minPriceSlider.value);
+            const maxLimit = parseFloat(maxPriceSlider.max);
+            
+            if (value >= minLimit && value <= maxLimit) {
+                maxPriceSlider.value = value;
+                updateDualRangeFill();
+            } else if (value < minLimit) {
+                this.value = minLimit;
+                maxPriceSlider.value = minLimit;
+                updateDualRangeFill();
+            } else if (value > maxLimit) {
+                this.value = maxLimit;
+                maxPriceSlider.value = maxLimit;
+                updateDualRangeFill();
+            }
+        });
+    }
+    
+    // Product card carousel
+    const carousels = document.querySelectorAll('.product-card-carousel');
+    carousels.forEach(carousel => {
+        const slides = carousel.querySelectorAll('.carousel-slide');
+        const dots = carousel.querySelectorAll('.carousel-dot');
+        const prevBtn = carousel.querySelector('.carousel-prev');
+        const nextBtn = carousel.querySelector('.carousel-next');
+        let currentSlide = 0;
+        
+        if (slides.length <= 1) return;
+        
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+            if (dots.length > 0) {
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+            }
+            currentSlide = index;
+        }
+        
+        function nextSlide() {
+            const next = (currentSlide + 1) % slides.length;
+            showSlide(next);
+        }
+        
+        function prevSlide() {
+            const prev = (currentSlide - 1 + slides.length) % slides.length;
+            showSlide(prev);
+        }
+        
+        if (nextBtn) {
+            nextBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                nextSlide();
+            });
+        }
+        
+        if (prevBtn) {
+            prevBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                prevSlide();
+            });
+        }
+        
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showSlide(index);
+            });
+        });
+        
+        // Auto-rotate on hover (optional)
+        let autoRotateInterval;
+        const card = carousel.closest('.product-card');
+        if (card) {
+            card.addEventListener('mouseenter', () => {
+                autoRotateInterval = setInterval(nextSlide, 3000);
+            });
+            card.addEventListener('mouseleave', () => {
+                if (autoRotateInterval) {
+                    clearInterval(autoRotateInterval);
+                }
+            });
+        }
+    });
+    
+    // Get cart URL from navbar
+    const cartLink = document.querySelector('.navbar-link-cart');
+    const cartUrl = cartLink ? cartLink.href : '/cart/';
+    
+    // AJAX cart add functionality
+    const cartForms = document.querySelectorAll('.product-card-form, .product-add-form');
+    cartForms.forEach(form => {
+        const submitButton = form.querySelector('button[type="submit"]');
+        
+        // If button is already "in cart", make it redirect to cart
+        if (submitButton && submitButton.classList.contains('btn-in-cart')) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                window.location.href = cartUrl;
+            });
+            return;
+        }
+        
+        const handleSubmit = async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const productId = form.dataset.productId;
+            const originalText = submitButton.textContent;
+            const originalClasses = submitButton.className;
+            
+            // Disable button during request
+            submitButton.disabled = true;
+            submitButton.textContent = 'Добавление...';
+            
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                // Handle redirect (non-JSON response, e.g., login required)
+                if (!response.headers.get('content-type')?.includes('application/json')) {
+                    // Redirect response (likely login required)
+                    window.location.href = response.url || form.action;
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update button text and style with animation
+                    submitButton.textContent = 'В корзине';
+                    submitButton.className = submitButton.className.replace('btn-primary', 'btn-in-cart');
+                    if (!submitButton.classList.contains('btn-in-cart')) {
+                        submitButton.classList.add('btn-in-cart');
+                    }
+                    submitButton.classList.remove('btn-primary');
+                    
+                    // Update form behavior: now redirects to cart on click
+                    form.removeEventListener('submit', handleSubmit);
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        window.location.href = cartUrl;
+                    });
+                    
+                    // Update cart count in navbar
+                    const cartBadge = document.querySelector('.navbar-link-cart .cart-badge');
+                    const currentCartLink = document.querySelector('.navbar-link-cart');
+                    
+                    if (data.cart_count > 0) {
+                        if (cartBadge) {
+                            cartBadge.textContent = data.cart_count;
+                        } else if (currentCartLink) {
+                            const badge = document.createElement('span');
+                            badge.className = 'cart-badge';
+                            badge.textContent = data.cart_count;
+                            currentCartLink.appendChild(badge);
+                        }
+                    }
+                    
+                    // Update all buttons for this product on the page
+                    const allButtonsForProduct = document.querySelectorAll(`.cart-button[data-product-id="${productId}"]`);
+                    allButtonsForProduct.forEach(btn => {
+                        btn.textContent = 'В корзине';
+                        btn.className = btn.className.replace('btn-primary', 'btn-in-cart');
+                        if (!btn.classList.contains('btn-in-cart')) {
+                            btn.classList.add('btn-in-cart');
+                        }
+                        btn.classList.remove('btn-primary');
+                        
+                    });
+                } else {
+                    // Show error
+                    alert(data.error || 'Ошибка при добавлении товара в корзину');
+                    submitButton.textContent = originalText;
+                    submitButton.className = originalClasses;
+                }
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                alert('Произошла ошибка при добавлении товара в корзину');
+                submitButton.textContent = originalText;
+                submitButton.className = originalClasses;
+            } finally {
+                submitButton.disabled = false;
+            }
+        };
+        
+        form.addEventListener('submit', handleSubmit);
+    });
+    
+    // AJAX cart quantity update functionality
+    const quantityForms = document.querySelectorAll('.quantity-form');
+    quantityForms.forEach(form => {
+        // Prevent form submission (it's inside another form)
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        });
+        
+        const quantityInput = form.querySelector('.quantity-input');
+        if (!quantityInput) return;
+        
+        // Quantity button handlers
+        const decreaseBtn = form.querySelector('.quantity-btn-decrease');
+        const increaseBtn = form.querySelector('.quantity-btn-increase');
+        
+        function updateQuantityButtons() {
+            const currentValue = parseInt(quantityInput.value) || 1;
+            const min = parseInt(quantityInput.min) || 1;
+            // Get max from input max attribute, data attribute, or form data attribute
+            const maxFromInput = parseInt(quantityInput.max) || parseInt(quantityInput.dataset.max) || Infinity;
+            const maxFromForm = parseInt(form.dataset.maxQuantity) || Infinity;
+            const max = Math.min(maxFromInput, maxFromForm);
+            
+            // Update input max attribute if needed
+            if (max !== Infinity && max !== parseInt(quantityInput.max)) {
+                quantityInput.max = max;
+                quantityInput.dataset.max = max;
+            }
+            
+            if (decreaseBtn) {
+                decreaseBtn.disabled = currentValue <= min;
+            }
+            if (increaseBtn) {
+                increaseBtn.disabled = currentValue >= max;
+            }
+        }
+        
+        // Initialize button states
+        updateQuantityButtons();
+        
+        if (decreaseBtn) {
+            decreaseBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const currentValue = parseInt(quantityInput.value) || 1;
+                const min = parseInt(quantityInput.min) || 1;
+                if (currentValue > min) {
+                    quantityInput.value = currentValue - 1;
+                    updateQuantityButtons();
+                    quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+        }
+        
+        if (increaseBtn) {
+            increaseBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const currentValue = parseInt(quantityInput.value) || 1;
+                const maxFromInput = parseInt(quantityInput.max) || parseInt(quantityInput.dataset.max) || Infinity;
+                const maxFromForm = parseInt(form.dataset.maxQuantity) || Infinity;
+                const max = Math.min(maxFromInput, maxFromForm);
+                
+                if (currentValue < max) {
+                    quantityInput.value = currentValue + 1;
+                    updateQuantityButtons();
+                    quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
+                } else {
+                    alert(`Доступно только ${max} шт. на складе`);
+                }
+            });
+        }
+        
+        quantityInput.addEventListener('change', function() {
+            const currentValue = parseInt(quantityInput.value) || 1;
+            const min = parseInt(quantityInput.min) || 1;
+            const max = parseInt(quantityInput.max) || Infinity;
+            
+            // Validate quantity against available stock
+            if (currentValue < min) {
+                quantityInput.value = min;
+                alert(`Минимальное количество: ${min}`);
+                updateQuantityButtons();
+                return;
+            }
+            
+            if (currentValue > max) {
+                quantityInput.value = max;
+                alert(`Доступно только ${max} шт. на складе`);
+                updateQuantityButtons();
+                return;
+            }
+            
+            updateQuantityButtons();
+            const formData = new FormData(form);
+            const itemId = form.dataset.itemId;
+            const originalValue = quantityInput.defaultValue || quantityInput.value;
+            
+            // Disable input and buttons during request
+            quantityInput.disabled = true;
+            if (decreaseBtn) decreaseBtn.disabled = true;
+            if (increaseBtn) increaseBtn.disabled = true;
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.headers.get('content-type')?.includes('application/json')) {
+                    window.location.reload();
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    if (data.removed) {
+                        // Item was removed, reload page
+                        window.location.reload();
+                    } else {
+                        // Update item price
+                        const itemPriceEl = document.querySelector(`.cart-item-price[data-item-id="${itemId}"] .price-current`);
+                        if (itemPriceEl) {
+                            const price = parseFloat(itemPriceEl.dataset.price || 0);
+                            const quantity = parseInt(quantityInput.value);
+                            const itemTotal = price * quantity;
+                            const formattedTotal = window.formatPrice(itemTotal);
+                            itemPriceEl.textContent = `${formattedTotal} ₴`;
+                            itemPriceEl.dataset.quantity = quantity;
+                        }
+                        
+                        // Update cart summary
+                        const totalPriceEl = document.querySelector('.cart-total-price');
+                        const totalDiscountEl = document.querySelector('.cart-total-discount');
+                        const finalPriceEl = document.querySelector('#finalPrice');
+                        
+                        if (totalPriceEl) {
+                            totalPriceEl.textContent = `${parseFloat(data.total_price).toFixed(2)} ₴`;
+                        }
+                        if (totalDiscountEl && parseFloat(data.total_discount) > 0) {
+                            totalDiscountEl.textContent = `-${parseFloat(data.total_discount).toFixed(2)} ₴`;
+                        }
+                        if (finalPriceEl) {
+                            // Recalculate with delivery price - will be updated by updateDeliveryInfo
+                            updateDeliveryInfo();
+                        }
+                        
+                        // Update cart count in navbar
+                        const cartBadge = document.querySelector('.navbar-link-cart .cart-badge');
+                        const cartLink = document.querySelector('.navbar-link-cart');
+                        
+                        if (data.cart_count > 0) {
+                            if (cartBadge) {
+                                cartBadge.textContent = data.cart_count;
+                            } else if (cartLink && data.cart_count > 0) {
+                                const badge = document.createElement('span');
+                                badge.className = 'cart-badge';
+                                badge.textContent = data.cart_count;
+                                cartLink.appendChild(badge);
+                            }
+                        } else if (cartBadge) {
+                            cartBadge.remove();
+                        }
+                    }
+                } else {
+                    // Show error and revert value
+                    const errorMsg = data.error || 'Ошибка при обновлении количества';
+                    alert(errorMsg);
+                    quantityInput.value = originalValue;
+                    updateQuantityButtons();
+                    
+                    // If error is about stock, update max attribute
+                    if (errorMsg.includes('Недостаточно') || errorMsg.includes('Доступно')) {
+                        const maxMatch = errorMsg.match(/Доступно:\s*(\d+)/);
+                        if (maxMatch) {
+                            const newMax = parseInt(maxMatch[1]);
+                            quantityInput.max = newMax;
+                            quantityInput.dataset.max = newMax;
+                            form.dataset.maxQuantity = newMax;
+                            // Ensure current value doesn't exceed max
+                            if (parseInt(quantityInput.value) > newMax) {
+                                quantityInput.value = newMax;
+                            }
+                            updateQuantityButtons();
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error updating quantity:', error);
+                alert('Произошла ошибка при обновлении количества');
+                quantityInput.value = originalValue;
+            })
+            .finally(() => {
+                quantityInput.disabled = false;
+                quantityInput.defaultValue = quantityInput.value;
+                updateQuantityButtons(); // This will re-enable buttons based on current value
+            });
+        });
+    });
+    
+    // Cart checkbox functionality - recalculate totals
+    const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+    if (itemCheckboxes.length > 0) {
+        // Delivery and payment functions (must be defined before recalculateCartTotals)
+        function getDeliveryPrice() {
+            const selectedDelivery = document.querySelector('input[name="delivery_type"]:checked');
+            if (!selectedDelivery) return 0;
+            
+            const deliveryPrices = {
+                'pickup': 0,
+                'courier': 100,
+                'nova_posta': 80
+            };
+            
+            return deliveryPrices[selectedDelivery.value] || 0;
+        }
+        
+        function updateDeliveryInfo() {
+            const selectedDelivery = document.querySelector('input[name="delivery_type"]:checked');
+            const deliveryPriceEl = document.querySelector('#deliveryPrice');
+            const deliveryTypeEl = document.querySelector('#deliveryTypeValue');
+            const finalPriceEl = document.querySelector('#finalPrice');
+            
+            if (selectedDelivery && deliveryPriceEl && deliveryTypeEl) {
+                const deliveryPrices = {
+                    'pickup': { price: 0, name: 'Самовывоз' },
+                    'courier': { price: 100, name: 'Курьер' },
+                    'nova_posta': { price: 80, name: 'Nova Posta' }
+                };
+                
+                const delivery = deliveryPrices[selectedDelivery.value] || deliveryPrices['pickup'];
+                deliveryPriceEl.textContent = `${window.formatPrice(delivery.price)} ₴`;
+                deliveryTypeEl.textContent = delivery.name;
+                
+                // Update final price
+                if (finalPriceEl) {
+                    const totalPriceEl = document.querySelector('.cart-total-price');
+                    const totalDiscountEl = document.querySelector('.cart-total-discount');
+                    
+                    // Extract price from formatted text (remove spaces, then parse)
+                    const totalPriceStr = totalPriceEl?.textContent.replace(/\s/g, '').replace(/[^\d,.]/g, '').replace(',', '.') || '0';
+                    const totalDiscountStr = totalDiscountEl?.textContent.replace(/\s/g, '').replace(/[^\d,.]/g, '').replace(',', '.') || '0';
+                    const totalPrice = parseFloat(totalPriceStr) || 0;
+                    const totalDiscount = parseFloat(totalDiscountStr) || 0;
+                    const deliveryPrice = delivery.price;
+                    
+                    const finalPrice = Math.max(0, totalPrice - totalDiscount + deliveryPrice);
+                    finalPriceEl.textContent = `${window.formatPrice(finalPrice)} ₴`;
+                }
+            }
+        }
+        
+        function updatePaymentInfo() {
+            const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+            const paymentTypeEl = document.querySelector('#paymentTypeValue');
+            
+            if (selectedPayment && paymentTypeEl) {
+                const paymentNames = {
+                    'cash': 'Наличная',
+                    'paid': 'Безналичная'
+                };
+                
+                paymentTypeEl.textContent = paymentNames[selectedPayment.value] || 'Наличная';
+            }
+        }
+        
+        function recalculateCartTotals() {
+            const checkedBoxes = document.querySelectorAll('.item-checkbox:checked');
+            
+            let totalPrice = 0;
+            let totalDiscount = 0;
+            
+            checkedBoxes.forEach(checkbox => {
+                const cartItem = checkbox.closest('.cart-item');
+                if (!cartItem) return;
+                
+                const priceEl = cartItem.querySelector('.cart-item-price .price-current');
+                if (priceEl) {
+                    const price = parseFloat(priceEl.dataset.price || 0);
+                    const quantity = parseInt(priceEl.dataset.quantity || 1);
+                    const discount = parseFloat(priceEl.dataset.discount || 0);
+                    
+                    const itemTotal = price * quantity;
+                    totalPrice += itemTotal;
+                    
+                    const itemDiscountTotal = discount * quantity;
+                    totalDiscount += itemDiscountTotal;
+                }
+            });
+            
+            // Update cart summary
+            const totalPriceEl = document.querySelector('.cart-total-price');
+            const totalDiscountEl = document.querySelector('.cart-total-discount');
+            const discountSection = totalDiscountEl ? totalDiscountEl.closest('.cart-summary-item.discount') : null;
+            
+            if (totalPriceEl) {
+                totalPriceEl.textContent = `${window.formatPrice(totalPrice)} ₴`;
+            }
+            
+            if (totalDiscount > 0) {
+                if (totalDiscountEl) {
+                    totalDiscountEl.textContent = `-${window.formatPrice(totalDiscount)} ₴`;
+                }
+                if (discountSection) {
+                    discountSection.style.display = '';
+                }
+            } else {
+                if (discountSection) {
+                    discountSection.style.display = 'none';
+                }
+            }
+            
+            // Update final price with delivery
+            updateDeliveryInfo();
+            
+            // Ensure final price is not negative
+            const finalPriceElCheck = document.querySelector('#finalPrice');
+            if (finalPriceElCheck) {
+                const finalText = finalPriceElCheck.textContent.replace(/\s/g, '').replace(/[^\d,.-]/g, '').replace(',', '.');
+                const finalValue = parseFloat(finalText) || 0;
+                if (finalValue < 0) {
+                    finalPriceElCheck.textContent = `${window.formatPrice(0)} ₴`;
+                }
+            }
+        }
+        
+        // Delivery and payment change handlers
+        const deliveryRadios = document.querySelectorAll('input[name="delivery_type"]');
+        if (deliveryRadios.length > 0) {
+            deliveryRadios.forEach(radio => {
+                radio.addEventListener('change', updateDeliveryInfo);
+            });
+        }
+        
+        const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+        if (paymentRadios.length > 0) {
+            paymentRadios.forEach(radio => {
+                radio.addEventListener('change', updatePaymentInfo);
+            });
+        }
+        
+        // Initialize delivery and payment info
+        updateDeliveryInfo();
+        updatePaymentInfo();
+        
+        // Update checkbox button icon and tooltip
+        function updateCheckboxIcon(checkbox) {
+            const iconElement = checkbox.nextElementSibling;
+            const labelElement = checkbox.closest('label.checkbox-button');
+            
+            if (iconElement && iconElement.classList.contains('checkbox-button-icon')) {
+                iconElement.textContent = checkbox.checked ? '✓' : '0';
+            }
+            
+            // Update tooltip
+            if (labelElement) {
+                labelElement.title = checkbox.checked ? 'Не добавлять' : 'Добавить';
+            }
+        }
+        
+        // Initialize checkbox icons and tooltips
+        itemCheckboxes.forEach(checkbox => {
+            updateCheckboxIcon(checkbox);
+            checkbox.addEventListener('change', function() {
+                updateCheckboxIcon(checkbox);
+                recalculateCartTotals();
+            });
+        });
+        
+        // Format all initial prices in cart (if formatAllPrices didn't catch them)
+        document.querySelectorAll('.cart-item-price .price-current').forEach(window.formatPriceElement);
+        
+        // Initial calculation
+        recalculateCartTotals();
+    }
+});

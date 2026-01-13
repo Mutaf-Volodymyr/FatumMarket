@@ -60,9 +60,26 @@ class OrderItem(BaseModel):
         'Order',
         on_delete=models.PROTECT,
         related_name='items',
-        verbose_name=_("Заказ")
+        verbose_name=_("Заказ"),
+        null=True,
+        blank=True,
 
     )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+    )
+
+    class OrderItemStatus(models.TextChoices):
+        CARD = 'card', _("Корзина")
+        ORDER = 'order', _("Заказ")
+
+    status = models.CharField(
+        max_length=100,
+        choices=OrderItemStatus.choices,
+        default=OrderItemStatus.CARD,
+    )
+
     product = models.ForeignKey(
         'products.Product',
         on_delete=models.PROTECT,
@@ -73,14 +90,10 @@ class OrderItem(BaseModel):
         validators=[MinValueValidator(1)],
         verbose_name=_("Количество"),
     )
-    price = PriceField(verbose_name=_('Цена продажи'))
+    price = PriceField(verbose_name=_('Цена продажи'), null=True, blank=True)
     discount = PriceField(verbose_name=_('Скидка'), default=0)
-    product_name = models.CharField(max_length=256, verbose_name='Название товара')
+    product_name = models.CharField(max_length=256, verbose_name='Название товара', null=True, blank=True)
 
-
-    @property
-    def price_with_discount(self):
-        return self.price + self.discount
 
     def __str__(self):
         return f"{self.order_id} | {self.product_name} | {self.quantity}"

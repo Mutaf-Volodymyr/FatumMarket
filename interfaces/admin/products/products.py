@@ -49,7 +49,7 @@ class ProductSupplyInline(admin.StackedInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category',  'is_active', 'qty', 'price', 'has_discount')
+    list_display = ('name', 'category',  'is_active', 'quantity', 'price', 'has_discount')
     fields = (
         'name',
         'description',

@@ -1,11 +1,12 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from base.for_model import BaseModel, PriceField
+from base.for_model import AuditMixin, SlugMixin
 
 
 __all__ = ['Brand']
 
-class Brand(BaseModel):
+class Brand(AuditMixin, SlugMixin):
+
     name = models.CharField(max_length=255, verbose_name=_("Название"))
     description = models.TextField(null=True, blank=True, verbose_name=_('Описание'))
     image = models.ImageField(

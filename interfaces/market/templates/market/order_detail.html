@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Заказ #{{ order.id }} - FatumMarket{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">Заказ #{{ order.id }}</h1>
+        <div class="order-status-badge order-status-{{ order.status }}">
+            {{ order.get_status_display }}
+        </div>
+    </div>
+    
+    <div class="order-detail">
+        <div class="order-info-section">
+            <h2>Информация о заказе</h2>
+            <dl class="info-list">
+                <dt>Номер заказа:</dt>
+                <dd>#{{ order.id }}</dd>
+                <dt>Дата создания:</dt>
+                <dd>{{ order.created_at|date:"d.m.Y H:i" }}</dd>
+                <dt>Статус:</dt>
+                <dd>{{ order.get_status_display }}</dd>
+                {% if order.delivery %}
+                    <dt>Способ доставки:</dt>
+                    <dd>{{ order.delivery.get_delivery_type_display }}</dd>
+                {% endif %}
+            </dl>
+        </div>
+        
+        <div class="order-items-section">
+            <h2>Товары в заказе</h2>
+            <div class="order-items-list">
+                {% for item in order.items.all %}
+                    <div class="order-item">
+                        <div class="order-item-image">
+                            {% with item.product.images.first as first_image %}
+                                {% if first_image %}
+                                    <img src="{{ first_image.image.url }}" alt="{{ item.product_name }}">
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div class="order-item-info">
+                            <h3>{{ item.product_name }}</h3>
+                            <p>Количество: {{ item.quantity }}</p>
+                            <p>Цена: {{ item.price }} ₴</p>
+                        </div>
+                        <div class="order-item-total">
+                            {{ item.price }} ₴ × {{ item.quantity }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="order-summary-section">
+            <h2>Итого</h2>
+            <dl class="summary-list">
+                <dt>Товаров на сумму:</dt>
+                <dd>{{ order.total_price }} ₴</dd>
+                {% if order.total_discount > 0 %}
+                    <dt>Скидка:</dt>
+                    <dd>-{{ order.total_discount }} ₴</dd>
+                {% endif %}
+                <dt class="total">Итого:</dt>
+                <dd class="total">{{ order.price_with_discount }} ₴</dd>
+            </dl>
+        </div>
+        
+        {% if order.comment %}
+            <div class="order-comment-section">
+                <h2>Комментарий</h2>
+                <p>{{ order.comment }}</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="order-actions">
+        <a href="{% url 'market:account' %}" class="btn btn-secondary">Вернуться к заказам</a>
+    </div>
+</div>
+{% endblock %}
+

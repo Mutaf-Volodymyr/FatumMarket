@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Личный кабинет - FatumMarket{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">Личный кабинет</h1>
+    </div>
+    
+    <div class="account-layout">
+        <div class="account-sidebar">
+            <div class="account-user-info">
+                <h2>{{ user.first_name|default:user.phone }}</h2>
+                <p>{{ user.email|default:"" }}</p>
+            </div>
+            <nav class="account-nav">
+                <a href="#orders" class="account-nav-link active">Мои заказы</a>
+            </nav>
+        </div>
+        
+        <div class="account-content">
+            <h2>История заказов</h2>
+            
+            {% if orders %}
+                <div class="orders-list">
+                    {% for order in orders %}
+                        <div class="order-card">
+                            <div class="order-card-header">
+                                <div class="order-card-info">
+                                    <h3>Заказ #{{ order.id }}</h3>
+                                    <p class="order-date">{{ order.created_at|date:"d.m.Y H:i" }}</p>
+                                </div>
+                                <div class="order-status-badge order-status-{{ order.status }}">
+                                    {{ order.get_status_display }}
+                                </div>
+                            </div>
+                            <div class="order-card-body">
+                                <div class="order-items-preview">
+                                    {% for item in order.items.all|slice:":3" %}
+                                        <span class="order-item-name">{{ item.product_name }} ({{ item.quantity }})</span>
+                                        {% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                    {% if order.items.count > 3 %}
+                                        и еще {{ order.items.count|add:"-3" }}
+                                    {% endif %}
+                                </div>
+                                <div class="order-total">
+                                    Итого: {{ order.price_with_discount }} ₴
+                                </div>
+                            </div>
+                            <div class="order-card-actions">
+                                <a href="{% url 'market:order_detail' order.id %}" class="btn btn-secondary btn-sm">Детали</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <p>У вас пока нет заказов</p>
+                    <a href="{% url 'market:home' %}" class="btn btn-primary">Перейти к товарам</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

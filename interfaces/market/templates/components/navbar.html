@@ -1,0 +1,50 @@
+{% load static %}
+<nav class="navbar">
+    <div class="container">
+        <div class="navbar-content">
+            <a href="{% url 'market:home' %}" class="navbar-logo">
+                <span class="logo-text">Fatum<span class="logo-accent">Market</span></span>
+            </a>
+            
+            <div class="navbar-menu" id="navbarMenu">
+                <div class="navbar-menu-main">
+                    <a href="{% url 'market:home' %}" class="navbar-link">
+                        <span class="link-text">Товары</span>
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'market:cart' %}" class="navbar-link navbar-link-cart">
+                            <span class="link-text">Корзина</span>
+                            {% if cart_count > 0 %}
+                                <span class="cart-badge">{{ cart_count }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'market:account' %}" class="navbar-link">
+                            <span class="link-text">Кабинет</span>
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="navbar-menu-auth">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'auth:logout' %}" class="navbar-link navbar-link-secondary">
+                            <span class="link-text">Выход</span>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'auth:login' %}" class="navbar-link navbar-link-secondary">
+                            <span class="link-text">Вход</span>
+                        </a>
+                        <a href="{% url 'auth:signup' %}" class="navbar-link navbar-link-primary">
+                            <span class="link-text">Регистрация</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <button class="navbar-toggle" id="navbarToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </div>
+</nav>
+

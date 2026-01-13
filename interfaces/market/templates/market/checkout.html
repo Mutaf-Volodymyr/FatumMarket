@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Оформление заказа - FatumMarket{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">Оформление заказа</h1>
+    </div>
+    
+    <div class="checkout-layout">
+        <div class="checkout-items">
+            <h2>Выбранные товары</h2>
+            {% for item in cart_items %}
+                <div class="checkout-item">
+                    <div class="checkout-item-image">
+                        {% with item.product.images.first as first_image %}
+                            {% if first_image %}
+                                <img src="{{ first_image.image.url }}" alt="{{ item.product.name }}">
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="checkout-item-info">
+                        <h3>{{ item.product.name }}</h3>
+                        <p>Количество: {{ item.quantity }}</p>
+                        <p>Цена: {{ item.price|default:item.product.price }} ₴</p>
+                    </div>
+                </div>
+            {% endfor %}
+            
+            <div class="checkout-summary">
+                <div class="summary-item">
+                    <span>Товаров на сумму:</span>
+                    <span>{{ total_price }} ₴</span>
+                </div>
+                {% if total_discount > 0 %}
+                    <div class="summary-item discount">
+                        <span>Скидка:</span>
+                        <span>-{{ total_discount }} ₴</span>
+                    </div>
+                {% endif %}
+                <div class="summary-total">
+                    <span>Итого:</span>
+                    <span>{{ final_price }} ₴</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="checkout-form-section">
+            <form method="post" class="checkout-form">
+                {% csrf_token %}
+                {% for item in cart_items %}
+                    <input type="hidden" name="selected_items" value="{{ item.id }}">
+                {% endfor %}
+                
+                <div class="form-group">
+                    <label for="comment">Комментарий к заказу (необязательно):</label>
+                    <textarea name="comment" id="comment" rows="4" class="form-control"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-large btn-block">Подтвердить заказ</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

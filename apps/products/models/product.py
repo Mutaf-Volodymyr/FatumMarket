@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.contrib import admin
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from base.for_model import BaseModel, PriceField, PositionField
+from base.for_model import BaseModel, PriceField, PositionField, SlugMixin
 
 
 __all__ = [
@@ -17,7 +17,7 @@ def get_upload_path(instance, filename):
     return f'products/{instance.product_id}/{filename}'
 
 
-class Product(BaseModel):
+class Product(BaseModel, SlugMixin):
     name = models.CharField(max_length=256, unique=True, verbose_name=_('Название'))
     description = models.TextField(null=True, blank=True, verbose_name=_('Описание'))
     is_active = models.BooleanField(default=False, verbose_name=_('Активно'))

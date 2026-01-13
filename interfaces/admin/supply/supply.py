@@ -22,8 +22,8 @@ class SupplyAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'is_batch_paid', 'sent_at', 'received_at')
     list_filter = (
         'is_batch_paid','import_coast',
-        # ("received_at", DateRangeFilter),
-        # ("sent_at", DateRangeFilter),
+        ("received_at", DateRangeFilter),
+        ("sent_at", DateRangeFilter),
 
     )
     fieldsets = (

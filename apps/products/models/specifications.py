@@ -1,13 +1,13 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from base.for_model import BaseModel
+from base.for_model import BaseModel, AuditMixin
 from django.utils.translation import gettext_lazy as _
 
 
 __all__ = ['SpecificationName', 'SpecificationValue',]
 
-class SpecificationName(BaseModel):
+class SpecificationName(AuditMixin):
     name = models.CharField(max_length=255, verbose_name=_("Название"))
     position = models.IntegerField(default=100, verbose_name=_("Position"))
     unit_measurement = models.CharField(
@@ -30,7 +30,7 @@ class SpecificationName(BaseModel):
 
 
 
-class SpecificationValue(BaseModel):
+class SpecificationValue(AuditMixin):
     specification_name = models.ForeignKey(
         SpecificationName,
         on_delete=models.CASCADE,

@@ -3,7 +3,7 @@ from django.db import models
 from mptt.fields import TreeForeignKey
 from mptt.models import MPTTModel
 from apps.products.models.product import Product
-from base.for_model import BaseModel, PositionField
+from base.for_model import PositionField, AuditMixin, SlugMixin
 from django.utils.translation import gettext_lazy as _
 
 
@@ -11,7 +11,8 @@ __all__ = [
     "Category",
 ]
 
-class Category(MPTTModel, BaseModel):
+class Category(MPTTModel, AuditMixin, SlugMixin):
+
     name = models.CharField(
         max_length=255,
         unique=True,
@@ -25,6 +26,14 @@ class Category(MPTTModel, BaseModel):
         related_name='children'
     )
     position = PositionField()
+    image = models.ImageField(
+        upload_to='categories',
+        null=True,
+        blank=True,
+        verbose_name=_('Изображение')
+    )
+
+    
 
     @property
     def products(self):

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if parent_category %}
+        {{ parent_category.name }} - Категории
+    {% else %}
+        Категории - FatumMarket
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if parent_category %}
+        <nav class="breadcrumbs">
+            <a href="{% url 'market:home' %}">Главная</a>
+            <span> / </span>
+            <a href="{% url 'market:category_list' %}">Категории</a>
+            <span> / </span>
+            <span>{{ parent_category.name }}</span>
+        </nav>
+        <h1 class="page-title">{{ parent_category.name }}</h1>
+    {% else %}
+        <h1 class="page-title">Категории</h1>
+    {% endif %}
+    
+    {% if categories %}
+        <div class="categories-grid">
+            {% for category in categories %}
+                <div class="category-card">
+                    <a href="{% url 'market:category_detail' category.slug %}" class="category-card-link">
+                        {% if category.image %}
+                            <div class="category-card-image">
+                                <img src="{{ category.image.url }}" alt="{{ category.name }}" loading="lazy">
+                            </div>
+                        {% else %}
+                            <div class="category-card-image category-card-image-placeholder">
+                                <span>{{ category.name }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="category-card-content">
+                            <h3 class="category-card-title">{{ category.name }}</h3>
+                            {% if category.products_count > 0 %}
+                                <p class="category-card-count">{{ category.products_count }} товаров</p>
+                            {% endif %}
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-message">Подкатегории не найдены</p>
+        {% if parent_category %}
+            <a href="{% url 'market:home' %}?category={{ parent_category.id }}" class="btn btn-primary">
+                Показать товары категории
+            </a>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
+

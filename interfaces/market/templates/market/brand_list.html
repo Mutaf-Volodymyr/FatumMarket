@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Бренды - FatumMarket{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Бренды</h1>
+    
+    {% if brands %}
+        <div class="brands-grid">
+            {% for brand in brands %}
+                <div class="brand-card">
+                    <a href="{% url 'market:home' %}?brand={{ brand.id }}" class="brand-card-link">
+                        {% if brand.image %}
+                            <div class="brand-card-image">
+                                <img src="{{ brand.image.url }}" alt="{{ brand.name }}" loading="lazy">
+                            </div>
+                        {% else %}
+                            <div class="brand-card-image brand-card-image-placeholder">
+                                <span>{{ brand.name }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="brand-card-content">
+                            <h3 class="brand-card-title">{{ brand.name }}</h3>
+                            {% if brand.description %}
+                                <p class="brand-card-description">{{ brand.description|truncatewords:15 }}</p>
+                            {% endif %}
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if brands.has_other_pages %}
+            <nav class="pagination-wrapper">
+                <ul class="pagination">
+                    {% if brands.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ brands.previous_page_number }}">
+                                <span>&laquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&laquo;</span>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in brands.paginator.page_range %}
+                        {% if brands.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > brands.number|add:'-3' and num < brands.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if brands.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ brands.next_page_number }}">
+                                <span>&raquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&raquo;</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <p class="empty-message">Бренды не найдены</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+

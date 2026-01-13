@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     
     # Third party apps
     'rest_framework',
@@ -48,7 +49,7 @@ INSTALLED_APPS = [
     'rangefilter',
     "phonenumber_field",
     'simple_history',
-
+    
     # apps
     "apps.users",
     "apps.orders",
@@ -56,9 +57,6 @@ INSTALLED_APPS = [
     'apps.supply',
     "apps.address",
     "apps.delivery"
-
-
-    
 ]
 
 MIDDLEWARE = [
@@ -77,7 +75,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'interfaces' / 'market' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -85,6 +83,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'interfaces.market.context_processors.cart_count',
             ],
         },
     },
@@ -140,6 +139,9 @@ USE_TZ = False
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [
+    BASE_DIR / 'interfaces' / 'market' / 'static',
+]
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -173,3 +175,13 @@ CORS_ALLOW_CREDENTIALS = True
 AUTH_USER_MODEL = 'users.User'
 
 GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY')
+
+# Authentication settings
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/auth/login/'
+
+AUTHENTICATION_BACKENDS = [
+    'apps.users.backends.PhoneOrEmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]

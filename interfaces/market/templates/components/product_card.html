@@ -1,0 +1,57 @@
+{% load static %}
+{% comment %}
+Usage: {% include 'components/product_card.html' with product=product %}
+{% endcomment %}
+<div class="product-card">
+    <a href="{% url 'market:product_detail' product.slug %}" class="product-card-link">
+        {% if product.images.all %}
+            <div class="product-card-image">
+                <div class="product-card-carousel" data-product-id="{{ product.id }}">
+                    {% for image in product.images.all %}
+                        <div class="carousel-slide {% if forloop.first %}active{% endif %}">
+                            <img src="{{ image.image.url }}" alt="{{ product.name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}">
+                        </div>
+                    {% endfor %}
+                    {% if product.images.count > 1 %}
+                        <button class="carousel-prev" aria-label="Предыдущее изображение">&lt;</button>
+                        <button class="carousel-next" aria-label="Следующее изображение">&gt;</button>
+                        <div class="carousel-dots">
+                            {% for image in product.images.all %}
+                                <button class="carousel-dot {% if forloop.first %}active{% endif %}" data-slide="{{ forloop.counter0 }}" aria-label="Изображение {{ forloop.counter }}"></button>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                {% if product.has_discount %}
+                    <span class="product-card-discount">-{{ product.discount }}%</span>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="product-card-image product-card-image-placeholder">
+                <span>Нет изображения</span>
+            </div>
+        {% endif %}
+        
+        <div class="product-card-content">
+            <h3 class="product-card-title">{{ product.name }}</h3>
+            <div class="product-card-price">
+                <span class="price-current">{{ product.price }} ₴</span>
+                {% if product.old_price %}
+                    <span class="price-old">{{ product.old_price }} ₴</span>
+                {% endif %}
+            </div>
+            {% if product.brand %}
+                <p class="product-card-brand">{{ product.brand.name }}</p>
+            {% endif %}
+        </div>
+    </a>
+    {% if user.is_authenticated %}
+        <form method="post" action="{% url 'market:cart_add' product.id %}" class="product-card-form" data-product-id="{{ product.id }}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-block cart-button {% if product.in_cart %}btn-in-cart{% else %}btn-primary{% endif %}" data-product-id="{{ product.id }}">
+                {% if product.in_cart %}В корзине{% else %}Добавить в корзину{% endif %}
+            </button>
+        </form>
+    {% endif %}
+</div>
+

@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Товары - FatumMarket{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="products-filters">
+        <div class="categories-brands-wrapper">
+            <button type="button" class="btn btn-secondary categories-brands-toggle" id="categoriesBrandsToggle">
+                Категории и Бренды
+            </button>
+            <div class="categories-brands-dropdown" id="categoriesBrandsDropdown">
+                <div class="categories-brands-content">
+                    <div class="categories-section">
+                        <h4 class="dropdown-section-title">Категории</h4>
+                        {% for category in root_categories %}
+                            <a href="{% url 'market:category_detail' category.slug %}" 
+                               class="dropdown-item category-item-link"
+                               data-category-id="{{ category.id }}">
+                                {{ category.name }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                    <div class="brands-section">
+                        <h4 class="dropdown-section-title">Бренды</h4>
+                        <a href="{% url 'market:brand_list' %}" class="dropdown-item brands-link">
+                            Все бренды
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <form method="get" class="search-form">
+            <input type="text" name="search" value="{{ search_query }}" placeholder="Поиск..." class="search-input">
+            <button type="submit" class="btn btn-primary">Поиск</button>
+            {% if selected_category_id %}
+                <input type="hidden" name="category" value="{{ selected_category_id }}">
+            {% endif %}
+            {% if selected_brand_id %}
+                <input type="hidden" name="brand" value="{{ selected_brand_id }}">
+            {% endif %}
+        </form>
+    </div>
+    
+    <div class="products-with-filters">
+        {% if filters %}
+            {% include 'components/product_filters.html' with filters=filters selected_specifications=selected_specifications selected_min_price=selected_min_price selected_max_price=selected_max_price selected_category_id=selected_category_id selected_brand_id=selected_brand_id search_query=search_query %}
+        {% endif %}
+        <div class="products-content">
+            <div class="products-sorting">
+                <div class="products-count">
+                    Найдено товаров: <strong>{{ total_products_count }}</strong>
+                </div>
+                <form method="get" class="sort-form">
+                    <label for="sort">Сортировать:</label>
+                    <select name="sort" id="sort" onchange="this.form.submit()">
+                        <option value="newest" {% if selected_sort == 'newest' or not selected_sort %}selected{% endif %}>Сначала новые</option>
+                        <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>Сначала старые</option>
+                        <option value="price_asc" {% if selected_sort == 'price_asc' %}selected{% endif %}>Цена: по возрастанию</option>
+                        <option value="price_desc" {% if selected_sort == 'price_desc' %}selected{% endif %}>Цена: по убыванию</option>
+                    </select>
+                    {% if selected_category_id %}
+                        <input type="hidden" name="category" value="{{ selected_category_id }}">
+                    {% endif %}
+                    {% if selected_brand_id %}
+                        <input type="hidden" name="brand" value="{{ selected_brand_id }}">
+                    {% endif %}
+                    {% if search_query %}
+                        <input type="hidden" name="search" value="{{ search_query }}">
+                    {% endif %}
+                    {% if selected_specifications %}
+                        {% for spec_id in selected_specifications %}
+                            <input type="hidden" name="spec" value="{{ spec_id }}">
+                        {% endfor %}
+                    {% endif %}
+                    {% if selected_min_price %}
+                        <input type="hidden" name="min_price" value="{{ selected_min_price }}">
+                    {% endif %}
+                    {% if selected_max_price %}
+                        <input type="hidden" name="max_price" value="{{ selected_max_price }}">
+                    {% endif %}
+                </form>
+            </div>
+            <div class="products-grid">
+                {% for product in products %}
+                    {% include 'components/product_card.html' with product=product %}
+                {% empty %}
+                    <p class="empty-message">Товары не найдены</p>
+                {% endfor %}
+            </div>
+            
+            {% if products.has_other_pages %}
+                <nav class="pagination-wrapper">
+                    <ul class="pagination">
+                        {% if products.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="{% url 'market:home' %}?{% for key, value_list in request.GET.lists %}{% if key != 'page' %}{% for value in value_list %}{{ key }}={{ value }}{% if not forloop.last %}&{% endif %}{% endfor %}{% if not forloop.last %}&{% endif %}{% endif %}{% endfor %}{% if request.GET %}&{% endif %}page={{ products.previous_page_number }}">
+                                    <span>&laquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&laquo;</span>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in products.paginator.page_range %}
+                            {% if num == 1 %}
+                                {% if products.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{% url 'market:home' %}?{% for key, value_list in request.GET.lists %}{% if key != 'page' %}{% for value in value_list %}{{ key }}={{ value }}{% if not forloop.last %}&{% endif %}{% endfor %}{% if not forloop.last %}&{% endif %}{% endif %}{% endfor %}{% if request.GET %}&{% endif %}page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                                {% if products.number > 4 %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% elif num == products.paginator.num_pages %}
+                                {% if products.number > products.paginator.num_pages|add:'-4' %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                                {% if products.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{% url 'market:home' %}?{% for key, value_list in request.GET.lists %}{% if key != 'page' %}{% for value in value_list %}{{ key }}={{ value }}{% if not forloop.last %}&{% endif %}{% endfor %}{% if not forloop.last %}&{% endif %}{% endif %}{% endfor %}{% if request.GET %}&{% endif %}page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% elif num >= products.number|add:'-2' and num <= products.number|add:'2' %}
+                                {% if products.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{% url 'market:home' %}?{% for key, value_list in request.GET.lists %}{% if key != 'page' %}{% for value in value_list %}{{ key }}={{ value }}{% if not forloop.last %}&{% endif %}{% endfor %}{% if not forloop.last %}&{% endif %}{% endif %}{% endfor %}{% if request.GET %}&{% endif %}page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if products.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{% url 'market:home' %}?{% for key, value_list in request.GET.lists %}{% if key != 'page' %}{% for value in value_list %}{{ key }}={{ value }}{% if not forloop.last %}&{% endif %}{% endfor %}{% if not forloop.last %}&{% endif %}{% endif %}{% endfor %}{% if request.GET %}&{% endif %}page={{ products.next_page_number }}">
+                                    <span>&raquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&raquo;</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

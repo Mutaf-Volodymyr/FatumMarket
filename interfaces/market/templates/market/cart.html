@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Корзина - FatumMarket{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">Корзина</h1>
+    </div>
+    
+    {% if cart_items %}
+        <form method="post" action="{% url 'market:checkout' %}" class="cart-form" id="cartForm">
+            {% csrf_token %}
+            <div class="cart-layout">
+                <!-- Левая часть (2/3) -->
+                <div class="cart-left">
+                    <!-- Блок 1: Товары -->
+                    <div class="cart-section">
+                        <h2 class="cart-section-title">Товары</h2>
+                        <div class="cart-items">
+                            {% for item in cart_items %}
+                                <div class="cart-item">
+                                    <div class="cart-item-left">
+                                        <div class="cart-item-checkbox">
+                                            <label class="checkbox-button" title="Не добавлять">
+                                                <input type="checkbox" name="selected_items" value="{{ item.id }}" checked class="item-checkbox" data-item-id="{{ item.id }}">
+                                                <span class="checkbox-button-icon">✓</span>
+                                            </label>
+                                        </div>
+                                        <div class="cart-item-actions">
+                                            <a href="{% url 'market:cart_remove' item.id %}" class="btn btn-danger btn-sm btn-icon" aria-label="Удалить" title="Удалить из корзины">×</a>
+                                        </div>
+                                    </div>
+                                    <div class="cart-item-image">
+                                        {% with item.product.images.first as first_image %}
+                                            {% if first_image %}
+                                                <img src="{{ first_image.image.url }}" alt="{{ item.product.name }}">
+                                            {% else %}
+                                                <div class="placeholder-image">Нет изображения</div>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                    <div class="cart-item-info">
+                                        <h3><a href="{% url 'market:product_detail' item.product.slug %}">{{ item.product.name }}</a></h3>
+                                        {% if item.product.brand %}
+                                            <p class="cart-item-brand">{{ item.product.brand.name }}</p>
+                                        {% endif %}
+                                        <div class="cart-item-unit-price">
+                                            {% with item_price=item.price|default:item.product.price %}
+                                                <span class="price-current">{{ item_price|floatformat:2 }} ₴</span>
+                                                {% if item.product.old_price and item.product.old_price > item_price %}
+                                                    <span class="price-old">{{ item.product.old_price|floatformat:2 }} ₴</span>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                    <div class="cart-item-right">
+                                        <div class="cart-item-quantity">
+                                            <form method="post" action="{% url 'market:cart_update' item.id %}" class="quantity-form" data-item-id="{{ item.id }}" data-max-quantity="{{ item.product.quantity }}">
+                                                {% csrf_token %}
+                                                <button type="button" class="quantity-btn quantity-btn-decrease" aria-label="Уменьшить количество">−</button>
+                                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.quantity }}" class="quantity-input" data-max="{{ item.product.quantity }}">
+                                                <button type="button" class="quantity-btn quantity-btn-increase" aria-label="Увеличить количество">+</button>
+                                            </form>
+                                            {% if item.product.quantity < 10 %}
+                                                <small class="stock-warning">Осталось: {{ item.product.quantity }} шт.</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="cart-item-price" data-item-id="{{ item.id }}">
+                                            {% with item_price=item.price|default:item.product.price item_discount=item.discount|default:0 %}
+                                                {% widthratio item_price 1 item.quantity as item_total %}
+                                                <span class="price-current" data-price="{{ item_price }}" data-quantity="{{ item.quantity }}" data-discount="{{ item_discount }}">{{ item_total|floatformat:2 }} ₴</span>
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Блок 2: Доставка -->
+                    <div class="cart-section">
+                        <h2 class="cart-section-title">Доставка</h2>
+                        <div class="delivery-options">
+                            <div class="delivery-option">
+                                <input type="radio" name="delivery_type" id="delivery_pickup" value="pickup" checked class="delivery-radio">
+                                <label for="delivery_pickup" class="delivery-label">
+                                    <span class="delivery-name">Самовывоз</span>
+                                    <span class="delivery-price">Бесплатно</span>
+                                </label>
+                            </div>
+                            <div class="delivery-option">
+                                <input type="radio" name="delivery_type" id="delivery_courier" value="courier" class="delivery-radio">
+                                <label for="delivery_courier" class="delivery-label">
+                                    <span class="delivery-name">Курьер</span>
+                                    <span class="delivery-price">100 ₴</span>
+                                </label>
+                            </div>
+                            <div class="delivery-option">
+                                <input type="radio" name="delivery_type" id="delivery_nova_posta" value="nova_posta" class="delivery-radio">
+                                <label for="delivery_nova_posta" class="delivery-label">
+                                    <span class="delivery-name">Nova Posta</span>
+                                    <span class="delivery-price">80 ₴</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Блок 3: Оплата -->
+                    <div class="cart-section">
+                        <h2 class="cart-section-title">Оплата</h2>
+                        <div class="payment-options">
+                            <div class="payment-option">
+                                <input type="radio" name="payment_method" id="payment_cash" value="cash" checked class="payment-radio">
+                                <label for="payment_cash" class="payment-label">
+                                    <span class="payment-name">Наличная</span>
+                                </label>
+                            </div>
+                            <div class="payment-option">
+                                <input type="radio" name="payment_method" id="payment_card" value="paid" class="payment-radio">
+                                <label for="payment_card" class="payment-label">
+                                    <span class="payment-name">Безналичная</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Правая часть (1/3) - Sticky блок -->
+                <div class="cart-right">
+                    <div class="cart-summary-sticky">
+                        <h2 class="cart-summary-title">Итого</h2>
+                        <div class="cart-summary-content">
+                            <div class="cart-summary-item">
+                                <span>Товаров на сумму:</span>
+                                <span class="cart-total-price">{{ total_price }} ₴</span>
+                            </div>
+                            {% if total_discount > 0 %}
+                                <div class="cart-summary-item discount">
+                                    <span>Скидка:</span>
+                                    <span class="cart-total-discount">-{{ total_discount }} ₴</span>
+                                </div>
+                            {% endif %}
+                            <div class="cart-summary-item delivery-summary">
+                                <span>Доставка:</span>
+                                <span class="cart-delivery-price" id="deliveryPrice">0 ₴</span>
+                            </div>
+                            <div class="cart-summary-total">
+                                <span>Итого:</span>
+                                <span class="cart-final-price" id="finalPrice">{{ final_price }} ₴</span>
+                            </div>
+                            <div class="cart-summary-delivery-type">
+                                <span>Тип доставки:</span>
+                                <span class="delivery-type-value" id="deliveryTypeValue">Самовывоз</span>
+                            </div>
+                            <div class="cart-summary-payment-type">
+                                <span>Тип оплаты:</span>
+                                <span class="payment-type-value" id="paymentTypeValue">Наличная</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-large btn-block">Оформить заказ</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    {% else %}
+        <div class="empty-cart">
+            <p>Ваша корзина пуста</p>
+            <a href="{% url 'market:home' %}" class="btn btn-primary">Перейти к товарам</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

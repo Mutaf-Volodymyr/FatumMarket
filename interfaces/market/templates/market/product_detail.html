@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - FatumMarket{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav class="breadcrumbs">
+        <a href="{% url 'market:home' %}">Главная</a>
+        <span> / </span>
+        {% for ancestor in product.category.get_ancestors %}
+            <a href="{% url 'market:category_detail' slug=ancestor.slug %}">{{ ancestor.name }}</a>
+            <span> / </span>
+        {% endfor %}
+        <a href="{% url 'market:category_detail' slug=product.category.slug %}">{{ product.category.name }}</a>
+        <span> / </span>
+        <span>{{ product.name }}</span>
+    </nav>
+    
+    <div class="product-detail">
+        <div class="product-detail-images">
+            {% if product.images.all %}
+                <div class="product-main-image" id="productMainImage" onclick="openImageModal(event, '{{ product.images.first.image.url }}')">
+                    <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" id="mainProductImage">
+                </div>
+                {% if product.images.count > 1 %}
+                    <div class="product-thumbnails">
+                        {% for image in product.images.all %}
+                            <img src="{{ image.image.url }}" alt="{{ product.name }}" 
+                                 class="thumbnail {% if forloop.first %}active{% endif %}"
+                                 onclick="changeMainImage(this.src)"
+                                 data-full-image="{{ image.image.url }}">
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="product-main-image placeholder">
+                    <span>Нет изображения</span>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Image Modal -->
+        <div id="imageModal" class="image-modal" onclick="closeImageModal(event)">
+            <span class="image-modal-close" onclick="closeImageModal(event)">&times;</span>
+            {% if product.images.count > 1 %}
+                <button class="image-modal-prev" onclick="changeModalImage(-1, event)">&#10094;</button>
+                <button class="image-modal-next" onclick="changeModalImage(1, event)">&#10095;</button>
+            {% endif %}
+            <img class="image-modal-content" id="modalImage" alt="{{ product.name }}" onclick="event.stopPropagation()">
+        </div>
+        
+        <div class="product-detail-info">
+            <h1 class="product-detail-title">{{ product.name }}</h1>
+            
+            {% if product.brand %}
+                <p class="product-detail-brand">{{ product.brand.name }}</p>
+            {% endif %}
+            
+            <div class="product-detail-price">
+                <span class="price-current">{{ product.price }} ₴</span>
+                {% if product.old_price %}
+                    <span class="price-old">{{ product.old_price }} ₴</span>
+                    <span class="price-discount">-{{ product.discount }}%</span>
+                {% endif %}
+            </div>
+            
+            {% if product.description %}
+                <div class="product-detail-description">
+                    <h3>Описание</h3>
+                    <p>{{ product.description|linebreaks }}</p>
+                </div>
+            {% endif %}
+            
+            <div class="product-detail-specifications">
+                <h3>Характеристики</h3>
+                <dl class="specifications-list">
+                    {% for spec in product.product_specification.all %}
+                        <dt>{{ spec.specification_name.name }}</dt>
+                        <dd>{{ spec.specification_value.value }}</dd>
+                    {% empty %}
+                        <p>Характеристики не указаны</p>
+                    {% endfor %}
+                </dl>
+            </div>
+            
+            <div class="product-detail-actions">
+                {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'market:cart_add' product.id %}" class="product-add-form" data-product-id="{{ product.id }}">
+                        {% csrf_token %}
+                        <div class="quantity-selector">
+                            <label for="quantity">Количество:</label>
+                            <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ product.quantity }}">
+                            <span class="stock-info">В наличии: {{ product.quantity }}</span>
+                        </div>
+                        <button type="submit" class="btn btn-large cart-button {% if product.in_cart %}btn-in-cart{% else %}btn-primary{% endif %}" data-product-id="{{ product.id }}">
+                            {% if product.in_cart %}В корзине{% else %}Добавить в корзину{% endif %}
+                        </button>
+                    </form>
+                {% else %}
+                    <p><a href="{% url 'auth:login' %}">Войдите</a> чтобы добавить товар в корзину</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    {% if related_products %}
+        <section class="related-products-section">
+            <h2 class="section-title">Похожие товары</h2>
+            <div class="products-grid">
+                {% for product in related_products %}
+                    {% include 'components/product_card.html' with product=product %}
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+</div>
+
+<script>
+let currentMainImageSrc = '{{ product.images.first.image.url }}';
+let currentModalImageIndex = 0;
+const productImages = [
+    {% for image in product.images.all %}
+        '{{ image.image.url }}'{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+function changeMainImage(src) {
+    document.getElementById('mainProductImage').src = src;
+    document.querySelectorAll('.thumbnail').forEach(thumb => thumb.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Update current main image source and index
+    currentMainImageSrc = event.target.getAttribute('data-full-image') || src;
+    const imageIndex = productImages.indexOf(currentMainImageSrc);
+    if (imageIndex !== -1) {
+        currentModalImageIndex = imageIndex;
+    }
+}
+
+function changeModalImage(direction, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    currentModalImageIndex += direction;
+    
+    // Wrap around
+    if (currentModalImageIndex < 0) {
+        currentModalImageIndex = productImages.length - 1;
+    } else if (currentModalImageIndex >= productImages.length) {
+        currentModalImageIndex = 0;
+    }
+    
+    const modalImg = document.getElementById('modalImage');
+    modalImg.src = productImages[currentModalImageIndex];
+}
+
+function openImageModal(event, imageSrc) {
+    if (event) {
+        event.stopPropagation();
+    }
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    
+    // Find current image index
+    const srcToUse = imageSrc || currentMainImageSrc;
+    const imageIndex = productImages.indexOf(srcToUse);
+    if (imageIndex !== -1) {
+        currentModalImageIndex = imageIndex;
+    }
+    
+    modal.style.display = 'flex';
+    modalImg.src = productImages[currentModalImageIndex];
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageModal(event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    const modal = document.getElementById('imageModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal on ESC key, navigate with arrow keys
+document.addEventListener('keydown', function(event) {
+    const modal = document.getElementById('imageModal');
+    if (modal.style.display === 'none' || modal.style.display === '') {
+        return;
+    }
+    
+    if (event.key === 'Escape') {
+        closeImageModal();
+    } else if (event.key === 'ArrowLeft') {
+        changeModalImage(-1, null);
+    } else if (event.key === 'ArrowRight') {
+        changeModalImage(1, null);
+    }
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,8 @@
+{% comment %}
+Usage: {% include 'components/button.html' with text="Кнопка" type="submit" style="primary" %}
+{% endcomment %}
+<button type="{{ type|default:'button' }}" class="btn btn-{{ style|default:'primary' }} {{ class|default:'' }}">
+    {{ text }}
+</button>
+
+
