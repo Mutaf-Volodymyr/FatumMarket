@@ -5,15 +5,12 @@ from django.contrib import messages
 from django.db import transaction
 from apps.orders.models import Order, OrderItem
 from apps.delivery.models import Delivery
+from interfaces.market.cart_utils import get_order_item_creator_kwark_by_request, get_cart_queryset_by_request
 
 
-@login_required
 def checkout_view(request):
     """Checkout page - create order from cart items"""
-    cart_items = OrderItem.objects.filter(
-        user=request.user,
-        status=OrderItem.OrderItemStatus.CARD
-    ).select_related('product')
+    cart_items = get_cart_queryset_by_request(request).select_related('product')
     
     if not cart_items.exists():
         messages.error(request, 'Корзина пуста')
@@ -23,16 +20,13 @@ def checkout_view(request):
         selected_items = request.POST.getlist('selected_items')
         
         if not selected_items:
-            messages.error(request, 'Выберите товары для оформления заказа')
             return redirect('market:cart')
         
         try:
             with transaction.atomic():
                 # Get selected cart items
-                selected_cart_items = OrderItem.objects.filter(
+                selected_cart_items = get_cart_queryset_by_request(request).filter(
                     id__in=selected_items,
-                    user=request.user,
-                    status=OrderItem.OrderItemStatus.CARD
                 )
                 
                 if not selected_cart_items.exists():
@@ -51,7 +45,7 @@ def checkout_view(request):
                 
                 # Create order
                 order = Order.objects.create(
-                    customer=request.user,
+                    **get_order_item_creator_kwark_by_request(request),
                     status=Order.OrderStatus.DRAFT,
                     total_price=total_price,
                     total_discount=total_discount,
@@ -68,14 +62,13 @@ def checkout_view(request):
                 delivery = Delivery.objects.create(
                     order=order,
                     delivery_type=Delivery.DeliveryTypeChoices.pickup,
-                    recipient=request.user,
+                    # recipient=request.user,
                 )
                 
-                messages.success(request, f'Заказ #{order.id} успешно оформлен!')
+
                 return redirect('market:order_detail', order_id=order.id)
         
         except Exception as e:
-            messages.error(request, f'Ошибка при оформлении заказа: {str(e)}')
             return redirect('market:cart')
     
     # Calculate totals for display
@@ -96,14 +89,13 @@ def checkout_view(request):
     })
 
 
-@login_required
 def order_detail_view(request, order_id):
     """Order detail page"""
     order = get_object_or_404(
-        Order.objects.select_related('customer', 'delivery', 'payment')
+        Order.objects.select_related('user', 'delivery', 'payment')
         .prefetch_related('items__product'),
         id=order_id,
-        customer=request.user
+        **get_order_item_creator_kwark_by_request(request),
     )
     
     return render(request, 'market/order_detail.html', {
@@ -115,7 +107,7 @@ def order_detail_view(request, order_id):
 def account_view(request):
     """User account page with order history"""
     orders = Order.objects.filter(
-        customer=request.user
+        **get_order_item_creator_kwark_by_request(request),
     ).select_related('delivery', 'payment').prefetch_related('items').order_by('-created_at')
     
     return render(request, 'market/account.html', {

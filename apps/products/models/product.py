@@ -123,6 +123,7 @@ class ProductSpecification(BaseModel):
         verbose_name=_("Название спецификации"),
         editable=False,
     )
+    # filter_hide = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if self.specification_name_id is None:

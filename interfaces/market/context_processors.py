@@ -1,14 +1,10 @@
-from apps.orders.models import OrderItem
+from interfaces.market.cart_utils import get_cart_queryset_by_request
 
 
 def cart_count(request):
     """Context processor to add cart count to all templates"""
-    cart_count = 0
-    if request.user.is_authenticated:
-        cart_count = OrderItem.objects.filter(
-            user=request.user,
-            status=OrderItem.OrderItemStatus.CARD
-        ).count()
-    return {'cart_count': cart_count}
+
+    return {'cart_count': get_cart_queryset_by_request(request).count()}
+
 
 

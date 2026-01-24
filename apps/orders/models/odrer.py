@@ -4,14 +4,27 @@ from django.db.models import JSONField
 from django.utils.translation import gettext_lazy as _
 from base.for_model import BaseModel, PriceField
 from config import settings
-
+from django.contrib.sessions.models import Session
 
 __all__ = ['Order', 'OrderItem', 'OrderPayment']
 
 
 
 class Order(BaseModel):
-    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name=_('Клиент'))
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        verbose_name=_('Клиент'),
+        null=True,
+        blank=True
+    )
+    session = models.ForeignKey(
+        Session,
+        on_delete=models.SET_NULL,
+        verbose_name=_('Сессия'),
+        null=True,
+        blank=True
+    )
 
     class OrderStatus(models.TextChoices):
         DRAFT = 'draft', _("Черновик")
@@ -51,7 +64,7 @@ class Order(BaseModel):
         db_table = "orders"
 
     def __str__(self):
-        return f"{self.customer.email} | {self.status}"
+        return f"{self.pk} | {self.status}"
 
 
 
@@ -68,6 +81,14 @@ class OrderItem(BaseModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
+        null=True, blank=True,
+    )
+    session = models.ForeignKey(
+        Session,
+        on_delete=models.SET_NULL,
+        verbose_name=_('Сессия'),
+        null=True,
+        blank=True
     )
 
     class OrderItemStatus(models.TextChoices):

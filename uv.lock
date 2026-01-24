@@ -243,19 +243,6 @@ wheels = [
 ]
 
 [[package]]
-name = "django-allauth"
-version = "65.13.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "asgiref" },
-    { name = "django" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e0/b7/42a048ba1dedbb6b553f5376a6126b1c753c10c70d1edab8f94c560c8066/django_allauth-65.13.1.tar.gz", hash = "sha256:2af0d07812f8c1a8e3732feaabe6a9db5ecf3fad6b45b6a0f7fd825f656c5a15", size = 1983857, upload-time = "2025-11-20T16:34:40.811Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d8/98/9d44ae1468abfdb521d651fb67f914165c7812dfdd97be16190c9b1cc246/django_allauth-65.13.1-py3-none-any.whl", hash = "sha256:2887294beedfd108b4b52ebd182e0ed373deaeb927fc5a22f77bbde3174704a6", size = 1787349, upload-time = "2025-11-20T16:34:37.354Z" },
-]
-
-[[package]]
 name = "django-cors-headers"
 version = "4.3.1"
 source = { registry = "https://pypi.org/simple" }
@@ -266,6 +253,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8a/04/a280a98256602d3f4fffae37a9410711fb80f9d6cf199679f6e93bbdb8b3/django-cors-headers-4.3.1.tar.gz", hash = "sha256:0bf65ef45e606aff1994d35503e6b677c0b26cafff6506f8fd7187f3be840207", size = 21146, upload-time = "2023-11-14T17:27:29.31Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fe/6a/3428ab5d1ec270e845f4ef064a7cefbf1339b4454788d77c00d36caa828c/django_cors_headers-4.3.1-py3-none-any.whl", hash = "sha256:0b1fd19297e37417fc9f835d39e45c8c642938ddba1acce0c1753d3edef04f36", size = 12785, upload-time = "2023-11-14T17:27:27.128Z" },
+]
+
+[[package]]
+name = "django-debug-toolbar"
+version = "6.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "sqlparse" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c0/50/acae2dd379164f6f4c6b6b36fd48a4d21b02095a03f4df7c30a8d1f1a62c/django_debug_toolbar-6.1.0.tar.gz", hash = "sha256:e962ec350c9be8bdba918138e975a9cdb193f60ec396af2bb71b769e8e165519", size = 309141, upload-time = "2025-10-30T19:50:39.458Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6d/72/685c978af45ad08257e2c69687a873eda6b6531c79b6e6091794c41c5ff6/django_debug_toolbar-6.1.0-py3-none-any.whl", hash = "sha256:e214dea4494087e7cebdcea84223819c5eb97f9de3110a3665ad673f0ba98413", size = 269069, upload-time = "2025-10-30T19:50:37.71Z" },
 ]
 
 [[package]]
@@ -373,8 +373,8 @@ dependencies = [
     { name = "cryptography" },
     { name = "django" },
     { name = "django-admin-rangefilter" },
-    { name = "django-allauth" },
     { name = "django-cors-headers" },
+    { name = "django-debug-toolbar" },
     { name = "django-filter" },
     { name = "django-google-maps" },
     { name = "django-jazzmin" },
@@ -395,6 +395,7 @@ dependencies = [
 [package.optional-dependencies]
 dev = [
     { name = "black" },
+    { name = "django-debug-toolbar" },
     { name = "isort" },
 ]
 
@@ -404,8 +405,9 @@ requires-dist = [
     { name = "cryptography", specifier = ">=41.0.0" },
     { name = "django", specifier = ">=6.0.0" },
     { name = "django-admin-rangefilter", specifier = ">=0.13.0" },
-    { name = "django-allauth", specifier = ">=0.57.0" },
     { name = "django-cors-headers", specifier = "==4.3.1" },
+    { name = "django-debug-toolbar", specifier = ">=6.1.0" },
+    { name = "django-debug-toolbar", marker = "extra == 'dev'", specifier = ">=5.2.0" },
     { name = "django-filter", specifier = ">=25.0.0" },
     { name = "django-google-maps", specifier = ">=0.14.0" },
     { name = "django-jazzmin", specifier = ">=3.0.0" },

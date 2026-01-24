@@ -341,13 +341,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // AJAX cart quantity update functionality
     const quantityForms = document.querySelectorAll('.quantity-form');
     quantityForms.forEach(form => {
-        // Prevent form submission (it's inside another form)
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        });
-        
         const quantityInput = form.querySelector('.quantity-input');
         if (!quantityInput) return;
         
@@ -434,8 +427,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             updateQuantityButtons();
-            const formData = new FormData(form);
+            const formData = new FormData();
+            formData.append('quantity', quantityInput.value);
+            // Get CSRF token from main form
+            const csrfToken = document.querySelector('#cartForm input[name="csrfmiddlewaretoken"]')?.value ||
+                             document.querySelector('form input[name="csrfmiddlewaretoken"]')?.value;
+            if (csrfToken) {
+                formData.append('csrfmiddlewaretoken', csrfToken);
+            }
             const itemId = form.dataset.itemId;
+            const action = form.dataset.action || form.action;
             const originalValue = quantityInput.defaultValue || quantityInput.value;
             
             // Disable input and buttons during request
@@ -443,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (decreaseBtn) decreaseBtn.disabled = true;
             if (increaseBtn) increaseBtn.disabled = true;
             
-            fetch(form.action, {
+            fetch(action, {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -465,7 +466,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         window.location.reload();
                     } else {
                         // Update item price
-                        const itemPriceEl = document.querySelector(`.cart-item-price[data-item-id="${itemId}"] .price-current`);
+                        const itemPriceCandidates = document.querySelectorAll(`.cart-item-price[data-item-id="${itemId}"] .price-current`);
+                        const itemPriceEl = Array.from(itemPriceCandidates).find(element => {
+                            const cartItem = element.closest('.cart-item');
+                            return cartItem && cartItem.offsetParent !== null;
+                        }) || itemPriceCandidates[0];
                         if (itemPriceEl) {
                             const price = parseFloat(itemPriceEl.dataset.price || 0);
                             const quantity = parseInt(quantityInput.value);
@@ -548,6 +553,163 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cart checkbox functionality - recalculate totals
     const itemCheckboxes = document.querySelectorAll('.item-checkbox');
     if (itemCheckboxes.length > 0) {
+        const cartVariantMediaQuery = window.matchMedia('(max-width: 768px)');
+
+        function toggleCartItemVariants() {
+            const enableSelector = cartVariantMediaQuery.matches ? '.cart-item-mobile' : '.cart-item-desktop';
+            const disableSelector = cartVariantMediaQuery.matches ? '.cart-item-desktop' : '.cart-item-mobile';
+
+            document.querySelectorAll(disableSelector).forEach(item => {
+                item.setAttribute('aria-hidden', 'true');
+                item.querySelectorAll('input, select, textarea, button').forEach(element => {
+                    if (!element.disabled) {
+                        element.dataset.variantDisabled = 'true';
+                        element.disabled = true;
+                    }
+                });
+            });
+
+            document.querySelectorAll(enableSelector).forEach(item => {
+                item.setAttribute('aria-hidden', 'false');
+                item.querySelectorAll('input, select, textarea, button').forEach(element => {
+                    if (element.dataset.variantDisabled === 'true') {
+                        element.disabled = false;
+                        delete element.dataset.variantDisabled;
+                    }
+                });
+            });
+
+            recalculateCartTotals();
+        }
+
+        toggleCartItemVariants();
+        cartVariantMediaQuery.addEventListener('change', toggleCartItemVariants);
+
+        function setupSwipeActions() {
+            const swipeThreshold = 80;
+            const maxSwipe = 120;
+            const cartItemsMobile = document.querySelectorAll('.cart-item-mobile');
+
+            function setItemState(item, checkbox) {
+                if (!item || !checkbox) return;
+                item.classList.toggle('is-disabled', !checkbox.checked);
+            }
+
+            cartItemsMobile.forEach(item => {
+                const content = item.querySelector('.cart-item-mobile-content');
+                const deleteBtn = item.querySelector('.swipe-delete-btn');
+                const toggleBtn = item.querySelector('.swipe-toggle-btn');
+                const checkbox = item.querySelector('.item-checkbox');
+
+                let startX = 0;
+                let startY = 0;
+                let tracking = false;
+                let lastTranslate = 0;
+
+                function closeItem() {
+                    item.classList.remove('swipe-open', 'swiping');
+                    if (content) {
+                        content.style.transform = 'translateX(0)';
+                    }
+                }
+
+                function openLeft() {
+                    item.classList.add('swipe-open');
+                    item.classList.remove('swipe-open-right');
+                    item.classList.remove('swiping');
+                    if (content) {
+                        content.style.transform = `translateX(-${maxSwipe}px)`;
+                    }
+                }
+
+                function toggleSelection() {
+                    if (!checkbox) return;
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                    closeItem();
+                }
+
+                if (checkbox) {
+                    setItemState(item, checkbox);
+                    if (toggleBtn) {
+                        toggleBtn.textContent = checkbox.checked ? 'Не добавлять' : 'Добавить';
+                    }
+                }
+
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', event => {
+                        event.preventDefault();
+                        toggleSelection();
+                    });
+                }
+
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', event => {
+                        event.preventDefault();
+                        const removeUrl = item.dataset.removeUrl;
+                        if (removeUrl) {
+                            window.location.href = removeUrl;
+                        }
+                    });
+                }
+
+                if (checkbox) {
+                    checkbox.addEventListener('change', () => {
+                        setItemState(item, checkbox);
+                        if (toggleBtn) {
+                            toggleBtn.textContent = checkbox.checked ? 'Не добавлять' : 'Добавить';
+                        }
+                    });
+                }
+
+                item.addEventListener('touchstart', event => {
+                    if (event.touches.length !== 1) return;
+                    if (event.target.closest('input, button, a')) return;
+                    const touch = event.touches[0];
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    tracking = true;
+                });
+
+                item.addEventListener('touchmove', event => {
+                    if (!tracking || event.touches.length !== 1 || !content) return;
+                    const touch = event.touches[0];
+                    const deltaX = touch.clientX - startX;
+                    const deltaY = touch.clientY - startY;
+
+                    if (Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
+                    event.preventDefault();
+                    item.classList.add('swiping');
+                    const base = item.classList.contains('swipe-open') ? -maxSwipe : 0;
+                    const nextTranslate = Math.max(-maxSwipe, Math.min(maxSwipe, base + deltaX));
+                    content.style.transform = `translateX(${nextTranslate}px)`;
+                    lastTranslate = nextTranslate;
+                }, { passive: false });
+
+                item.addEventListener('touchend', event => {
+                    if (!tracking) return;
+                    tracking = false;
+                    const touch = event.changedTouches[0];
+                    const deltaX = touch.clientX - startX;
+                    const deltaY = touch.clientY - startY;
+                    if (Math.abs(deltaX) <= Math.abs(deltaY)) {
+                        item.classList.remove('swiping');
+                        return;
+                    }
+
+                    if (deltaX < -swipeThreshold || lastTranslate <= -swipeThreshold) {
+                        openLeft();
+                    } else if (deltaX > swipeThreshold || lastTranslate >= swipeThreshold) {
+                        toggleSelection();
+                    } else {
+                        closeItem();
+                    }
+                });
+            });
+        }
+
+        setupSwipeActions();
         // Delivery and payment functions (must be defined before recalculateCartTotals)
         function getDeliveryPrice() {
             const selectedDelivery = document.querySelector('input[name="delivery_type"]:checked');
@@ -618,8 +780,9 @@ document.addEventListener('DOMContentLoaded', function() {
             let totalDiscount = 0;
             
             checkedBoxes.forEach(checkbox => {
+                if (checkbox.disabled) return;
                 const cartItem = checkbox.closest('.cart-item');
-                if (!cartItem) return;
+                if (!cartItem || cartItem.offsetParent === null) return;
                 
                 const priceEl = cartItem.querySelector('.cart-item-price .price-current');
                 if (priceEl) {

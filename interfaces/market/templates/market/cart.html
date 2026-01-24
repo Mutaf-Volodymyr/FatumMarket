@@ -20,61 +20,8 @@
                         <h2 class="cart-section-title">Товары</h2>
                         <div class="cart-items">
                             {% for item in cart_items %}
-                                <div class="cart-item">
-                                    <div class="cart-item-left">
-                                        <div class="cart-item-checkbox">
-                                            <label class="checkbox-button" title="Не добавлять">
-                                                <input type="checkbox" name="selected_items" value="{{ item.id }}" checked class="item-checkbox" data-item-id="{{ item.id }}">
-                                                <span class="checkbox-button-icon">✓</span>
-                                            </label>
-                                        </div>
-                                        <div class="cart-item-actions">
-                                            <a href="{% url 'market:cart_remove' item.id %}" class="btn btn-danger btn-sm btn-icon" aria-label="Удалить" title="Удалить из корзины">×</a>
-                                        </div>
-                                    </div>
-                                    <div class="cart-item-image">
-                                        {% with item.product.images.first as first_image %}
-                                            {% if first_image %}
-                                                <img src="{{ first_image.image.url }}" alt="{{ item.product.name }}">
-                                            {% else %}
-                                                <div class="placeholder-image">Нет изображения</div>
-                                            {% endif %}
-                                        {% endwith %}
-                                    </div>
-                                    <div class="cart-item-info">
-                                        <h3><a href="{% url 'market:product_detail' item.product.slug %}">{{ item.product.name }}</a></h3>
-                                        {% if item.product.brand %}
-                                            <p class="cart-item-brand">{{ item.product.brand.name }}</p>
-                                        {% endif %}
-                                        <div class="cart-item-unit-price">
-                                            {% with item_price=item.price|default:item.product.price %}
-                                                <span class="price-current">{{ item_price|floatformat:2 }} ₴</span>
-                                                {% if item.product.old_price and item.product.old_price > item_price %}
-                                                    <span class="price-old">{{ item.product.old_price|floatformat:2 }} ₴</span>
-                                                {% endif %}
-                                            {% endwith %}
-                                        </div>
-                                    </div>
-                                    <div class="cart-item-right">
-                                        <div class="cart-item-quantity">
-                                            <form method="post" action="{% url 'market:cart_update' item.id %}" class="quantity-form" data-item-id="{{ item.id }}" data-max-quantity="{{ item.product.quantity }}">
-                                                {% csrf_token %}
-                                                <button type="button" class="quantity-btn quantity-btn-decrease" aria-label="Уменьшить количество">−</button>
-                                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.quantity }}" class="quantity-input" data-max="{{ item.product.quantity }}">
-                                                <button type="button" class="quantity-btn quantity-btn-increase" aria-label="Увеличить количество">+</button>
-                                            </form>
-                                            {% if item.product.quantity < 10 %}
-                                                <small class="stock-warning">Осталось: {{ item.product.quantity }} шт.</small>
-                                            {% endif %}
-                                        </div>
-                                        <div class="cart-item-price" data-item-id="{{ item.id }}">
-                                            {% with item_price=item.price|default:item.product.price item_discount=item.discount|default:0 %}
-                                                {% widthratio item_price 1 item.quantity as item_total %}
-                                                <span class="price-current" data-price="{{ item_price }}" data-quantity="{{ item.quantity }}" data-discount="{{ item_discount }}">{{ item_total|floatformat:2 }} ₴</span>
-                                            {% endwith %}
-                                        </div>
-                                    </div>
-                                </div>
+                                {% include 'components/cart_item.html' with item=item %}
+                                {% include 'components/cart_item_mobile.html' with item=item %}
                             {% endfor %}
                         </div>
                     </div>

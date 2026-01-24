@@ -5,25 +5,23 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from apps.orders.models import OrderItem
 from apps.products.models import Product
+from interfaces.market.cart_utils import get_cart_queryset_by_request, get_order_item_creator_kwark_by_request
 
 
-@login_required
 def cart_view(request):
-    """View cart with all items"""
-    cart_items = OrderItem.objects.filter(
-        user=request.user,
-        status=OrderItem.OrderItemStatus.CARD
+    cart_items = get_cart_queryset_by_request(
+       request
     ).select_related('product').prefetch_related('product__images')
-    
+
     total_price = Decimal('0.00')
     total_discount = Decimal('0.00')
-    
+
     for item in cart_items:
         item_total = (item.price or item.product.price) * item.quantity
         total_price += item_total
         item_discount = (item.discount or Decimal('0.00')) * item.quantity
         total_discount += item_discount
-    
+
     return render(request, 'market/cart.html', {
         'cart_items': cart_items,
         'total_price': total_price,
@@ -32,7 +30,6 @@ def cart_view(request):
     })
 
 
-@login_required
 def cart_add_view(request, product_id):
     """Add product to cart"""
     if request.method == 'POST':
@@ -43,11 +40,9 @@ def cart_add_view(request, product_id):
             quantity = 1
         
         # Check if product already in cart
-        cart_item = OrderItem.objects.filter(
-            user=request.user,
-            product=product,
-            status=OrderItem.OrderItemStatus.CARD
-        ).first()
+        cart_item = get_cart_queryset_by_request(
+               request
+            ).filter(product=product).first()
         
         success = False
         error_message = None
@@ -67,12 +62,9 @@ def cart_add_view(request, product_id):
                 error_message = f'Недостаточно товара на складе. Доступно: {product.quantity}'
             else:
                 OrderItem.objects.create(
-                    user=request.user,
+                    **get_order_item_creator_kwark_by_request(request),
                     product=product,
                     quantity=quantity,
-                    price=product.price,
-                    discount=product.discount if product.has_discount else Decimal('0.00'),
-                    product_name=product.name,
                     status=OrderItem.OrderItemStatus.CARD
                 )
                 success = True
@@ -80,10 +72,7 @@ def cart_add_view(request, product_id):
         # Check if this is an AJAX request
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
             # Get updated cart count
-            cart_count = OrderItem.objects.filter(
-                user=request.user,
-                status=OrderItem.OrderItemStatus.CARD
-            ).count()
+            cart_count = get_cart_queryset_by_request(request).count()
             
             if success:
                 return JsonResponse({
@@ -111,29 +100,28 @@ def cart_add_view(request, product_id):
     return redirect('market:home')
 
 
-@login_required
 def cart_remove_view(request, item_id):
     """Remove item from cart"""
     cart_item = get_object_or_404(
         OrderItem,
         id=item_id,
-        user=request.user,
-        status=OrderItem.OrderItemStatus.CARD
+        status=OrderItem.OrderItemStatus.CARD,
+        **get_order_item_creator_kwark_by_request(request),
     )
     cart_item.delete()
     messages.success(request, 'Товар удален из корзины')
     return redirect('market:cart')
 
 
-@login_required
+
 def cart_update_view(request, item_id):
     """Update cart item quantity"""
     if request.method == 'POST':
         cart_item = get_object_or_404(
             OrderItem,
             id=item_id,
-            user=request.user,
-            status=OrderItem.OrderItemStatus.CARD
+            status=OrderItem.OrderItemStatus.CARD,
+            **get_order_item_creator_kwark_by_request(request),
         )
         quantity = int(request.POST.get('quantity', 1))
         
@@ -155,10 +143,7 @@ def cart_update_view(request, item_id):
         # Check if this is an AJAX request
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
             # Calculate updated totals
-            cart_items = OrderItem.objects.filter(
-                user=request.user,
-                status=OrderItem.OrderItemStatus.CARD
-            ).select_related('product')
+            cart_items = get_cart_queryset_by_request(request).select_related('product')
             
             total_price = Decimal('0.00')
             total_discount = Decimal('0.00')

@@ -57,7 +57,7 @@ class User(AbstractUser, BaseModel):
     first_name = models.CharField(_("Имя"), max_length=50, blank=True)
     last_name = models.CharField(_("Фамилия"), max_length=50, blank=True)
     # контакты
-    email = models.EmailField(_("Email"), blank=True, null=True)
+    email = models.EmailField(blank=True, null=True, verbose_name=_("Email") )
     phone = PhoneNumberField(unique=True, verbose_name=_('Номер телефона'))
     telegram_id = models.CharField(max_length=50, blank=True, verbose_name=_("Телеграм ID"))
     addresses = models.ManyToManyField("address.Address", blank=True, verbose_name=_("Адреса"))

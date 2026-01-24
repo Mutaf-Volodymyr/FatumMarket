@@ -52,7 +52,14 @@ class BaseModel(AuditMixin):
 
 class SlugMixin(models.Model):
     """Миксин для автоматической генерации slug из поля name"""
-    slug = models.SlugField(max_length=255, unique=True, editable=False, verbose_name=_('Slug'))
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        editable=False,
+        verbose_name=_('Slug'),
+        null=True,
+        blank=True,
+    )
     
     class Meta:
         abstract = True

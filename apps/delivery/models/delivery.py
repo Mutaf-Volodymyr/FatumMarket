@@ -76,7 +76,7 @@ class Delivery(BaseModel):
 
     def __str__(self):
         is_delivered = "+" if self.is_delivered else '-'
-        return f"[{self.order_id}] to {self.user} | {self.delivery_type}  | {is_delivered}"
+        return f"[{self.order_id}] to {self.recipient} | {self.delivery_type}  | {is_delivered}"
 
 
     def _get_old_model(self):

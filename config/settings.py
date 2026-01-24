@@ -59,6 +59,13 @@ INSTALLED_APPS = [
     "apps.delivery"
 ]
 
+if DEBUG:
+    INSTALLED_APPS.append("debug_toolbar")
+
+    DEBUG_TOOLBAR_CONFIG = {
+        "SHOW_TOOLBAR_CALLBACK": lambda request: True,
+    }
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -163,6 +170,11 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
 }
+
+# Session
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
+SITE_ID = 1
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [

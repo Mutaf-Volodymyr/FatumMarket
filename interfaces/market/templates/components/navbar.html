@@ -11,13 +11,14 @@
                     <a href="{% url 'market:home' %}" class="navbar-link">
                         <span class="link-text">Товары</span>
                     </a>
-                    {% if user.is_authenticated %}
+
                         <a href="{% url 'market:cart' %}" class="navbar-link navbar-link-cart">
                             <span class="link-text">Корзина</span>
                             {% if cart_count > 0 %}
                                 <span class="cart-badge">{{ cart_count }}</span>
                             {% endif %}
                         </a>
+                {% if user.is_authenticated %}
                         <a href="{% url 'market:account' %}" class="navbar-link">
                             <span class="link-text">Кабинет</span>
                         </a>

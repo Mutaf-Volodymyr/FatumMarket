@@ -45,13 +45,13 @@ Usage: {% include 'components/product_card.html' with product=product %}
             {% endif %}
         </div>
     </a>
-    {% if user.is_authenticated %}
-        <form method="post" action="{% url 'market:cart_add' product.id %}" class="product-card-form" data-product-id="{{ product.id }}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-block cart-button {% if product.in_cart %}btn-in-cart{% else %}btn-primary{% endif %}" data-product-id="{{ product.id }}">
-                {% if product.in_cart %}В корзине{% else %}Добавить в корзину{% endif %}
-            </button>
-        </form>
-    {% endif %}
+
+    <form method="post" action="{% url 'market:cart_add' product.id %}" class="product-card-form" data-product-id="{{ product.id }}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-block cart-button {% if product.in_cart %}btn-in-cart{% else %}btn-primary{% endif %}" data-product-id="{{ product.id }}">
+            {% if product.in_cart %}В корзине{% else %}Добавить в корзину{% endif %}
+        </button>
+    </form>
+
 </div>
 

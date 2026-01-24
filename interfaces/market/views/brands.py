@@ -22,3 +22,4 @@ def brand_list_view(request):
     })
 
 
+
