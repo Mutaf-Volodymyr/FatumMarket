@@ -254,6 +254,72 @@ body {
     color: #721C24;
 }
 
+.cart-form.is-removing {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* Alerts */
+.alert-container {
+    position: fixed;
+    left: var(--spacing-md);
+    bottom: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    z-index: 2000;
+    max-width: min(360px, calc(100vw - 2 * var(--spacing-md)));
+}
+
+.alert {
+    background-color: #FFFFFF;
+    color: var(--color-text);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    border-left: 4px solid var(--color-primary);
+    font-size: 0.95rem;
+    line-height: 1.4;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.alert.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.alert.is-hide {
+    opacity: 0;
+    transform: translateY(12px);
+}
+
+.alert-success {
+    background-color: #F5F5F5;
+    border-color: var(--color-primary);
+    color: var(--color-text);
+}
+
+.alert-error {
+    background-color: rgba(220, 20, 60, 0.1);
+    border-color: var(--color-accent);
+    color: var(--color-text);
+}
+
+.alert-warning {
+    background-color: #FAFAFA;
+    border-color: var(--color-accent);
+    color: var(--color-text);
+}
+
+.alert-info {
+    background-color: #FFFFFF;
+    border-color: var(--color-primary);
+    color: var(--color-text);
+}
+
 /* Hero Section */
 .hero-section {
     background-color: var(--color-primary);
@@ -2622,6 +2688,18 @@ body {
 
     .cart-item-mobile.swipe-open .cart-item-mobile-content {
         transform: translateX(-120px);
+    }
+
+    .cart-item-mobile.is-removing .cart-item-mobile-content {
+        transform: translateX(-100%);
+        opacity: 0;
+        transition: transform 0.25s ease, opacity 0.25s ease;
+    }
+
+    .cart-item.is-removing {
+        opacity: 0;
+        transform: translateX(-20px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
     }
     .cart-item-mobile.is-disabled .cart-item-mobile-content::after {
         content: '';

@@ -1,4 +1,4 @@
-<div class="cart-item cart-item-desktop">
+<div class="cart-item cart-item-desktop" data-item-id="{{ item.id }}">
     <div class="cart-item-left">
         <div class="cart-item-checkbox">
             <label class="checkbox-button" title="Не добавлять">
@@ -7,7 +7,7 @@
             </label>
         </div>
         <div class="cart-item-actions">
-            <a href="{% url 'market:cart_remove' item.id %}" class="btn btn-danger btn-sm btn-icon" aria-label="Удалить" title="Удалить из корзины">×</a>
+            <a href="{% url 'market:cart_remove' item.id %}" class="btn btn-danger btn-sm btn-icon cart-remove-btn" data-remove-url="{% url 'market:cart_remove' item.id %}" aria-label="Удалить" title="Удалить из корзины">×</a>
         </div>
     </div>
     <div class="cart-item-image">

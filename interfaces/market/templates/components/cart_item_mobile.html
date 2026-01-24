@@ -1,4 +1,4 @@
-<div class="cart-item cart-item-mobile" data-remove-url="{% url 'market:cart_remove' item.id %}">
+<div class="cart-item cart-item-mobile" data-item-id="{{ item.id }}" data-remove-url="{% url 'market:cart_remove' item.id %}">
     <div class="cart-item-swipe-actions" aria-hidden="true">
         <button type="button" class="cart-item-swipe-btn swipe-toggle-btn" data-toggle-label="Не добавлять">Не добавлять</button>
         <button type="button" class="cart-item-swipe-btn swipe-delete-btn">Удалить</button>

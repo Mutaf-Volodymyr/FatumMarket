@@ -1,5 +1,154 @@
 // Mobile menu toggle
 document.addEventListener('DOMContentLoaded', function() {
+    function showAlert(message, type = 'info', timeout = 4500) {
+        if (!message) return;
+        let container = document.querySelector('.alert-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'alert-container';
+            container.setAttribute('role', 'status');
+            container.setAttribute('aria-live', 'polite');
+            document.body.appendChild(container);
+        }
+
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}`;
+        alert.textContent = message;
+        alert.dataset.alertTimeout = timeout;
+        container.appendChild(alert);
+
+        requestAnimationFrame(() => {
+            alert.classList.add('is-visible');
+        });
+
+        window.setTimeout(() => {
+            alert.classList.add('is-hide');
+            window.setTimeout(() => {
+                alert.remove();
+            }, 300);
+        }, timeout);
+    }
+
+    function updateCartBadge(cartCount) {
+        const cartBadge = document.querySelector('.navbar-link-cart .cart-badge');
+        const cartLink = document.querySelector('.navbar-link-cart');
+        if (!cartLink) return;
+
+        if (cartCount > 0) {
+            if (cartBadge) {
+                cartBadge.textContent = cartCount;
+            } else {
+                const badge = document.createElement('span');
+                badge.className = 'cart-badge';
+                badge.textContent = cartCount;
+                cartLink.appendChild(badge);
+            }
+        } else if (cartBadge) {
+            cartBadge.remove();
+        }
+    }
+
+    function updateCartTotals(data) {
+        const totalPriceEl = document.querySelector('.cart-total-price');
+        const totalDiscountEl = document.querySelector('.cart-total-discount');
+        const discountSection = totalDiscountEl ? totalDiscountEl.closest('.cart-summary-item.discount') : null;
+
+        if (totalPriceEl && data.total_price !== undefined) {
+            totalPriceEl.textContent = `${window.formatPrice(parseFloat(data.total_price))} ₴`;
+        }
+
+        const totalDiscount = parseFloat(data.total_discount || 0);
+        if (totalDiscount > 0) {
+            if (totalDiscountEl) {
+                totalDiscountEl.textContent = `-${window.formatPrice(totalDiscount)} ₴`;
+            }
+            if (discountSection) {
+                discountSection.style.display = '';
+            }
+        } else if (discountSection) {
+            discountSection.style.display = 'none';
+        }
+
+        if (typeof updateDeliveryInfo === 'function') {
+            updateDeliveryInfo();
+        }
+    }
+
+    function showEmptyCartState() {
+        const cartForm = document.querySelector('.cart-form');
+        const container = document.querySelector('.container');
+        if (!container || !cartForm) return;
+
+        cartForm.classList.add('is-removing');
+        window.setTimeout(() => {
+            cartForm.remove();
+            const homeUrl = document.querySelector('.navbar-logo')?.getAttribute('href') || '/';
+            const empty = document.createElement('div');
+            empty.className = 'empty-cart';
+            empty.innerHTML = `
+                <p>Ваша корзина пуста</p>
+                <a href="${homeUrl}" class="btn btn-primary">Перейти к товарам</a>
+            `;
+            container.appendChild(empty);
+        }, 260);
+    }
+
+    function removeCartItemById(itemId, removeUrl) {
+        if (!removeUrl || !itemId) return;
+        const csrfToken = document.querySelector('#cartForm input[name="csrfmiddlewaretoken"]')?.value ||
+                         document.querySelector('form input[name="csrfmiddlewaretoken"]')?.value;
+        fetch(removeUrl, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {})
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                showAlert(data.error || 'Не удалось удалить товар', 'error');
+                return;
+            }
+
+            const items = document.querySelectorAll(`.cart-item[data-item-id="${itemId}"]`);
+            items.forEach(cartItem => {
+                cartItem.classList.add('is-removing');
+            });
+
+            window.setTimeout(() => {
+                items.forEach(cartItem => cartItem.remove());
+                updateCartTotals(data);
+                updateCartBadge(parseInt(data.cart_count, 10) || 0);
+                if (data.empty) {
+                    showEmptyCartState();
+                }
+            }, 260);
+
+            showAlert(data.message || 'Товар удален из корзины', 'success');
+        })
+        .catch(() => {
+            showAlert('Не удалось удалить товар', 'error');
+        });
+    }
+
+    const alerts = document.querySelectorAll('.alert');
+    if (alerts.length > 0) {
+        alerts.forEach(alert => {
+            requestAnimationFrame(() => {
+                alert.classList.add('is-visible');
+            });
+
+            const timeout = parseInt(alert.dataset.alertTimeout, 10) || 4500;
+            window.setTimeout(() => {
+                alert.classList.add('is-hide');
+                window.setTimeout(() => {
+                    alert.remove();
+                }, 300);
+            }, timeout);
+        });
+    }
     const navbarToggle = document.getElementById('navbarToggle');
     const navbarMenu = document.getElementById('navbarMenu');
     
@@ -321,13 +470,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 } else {
                     // Show error
-                    alert(data.error || 'Ошибка при добавлении товара в корзину');
+                    showAlert(data.error || 'Ошибка при добавлении товара в корзину', 'error');
                     submitButton.textContent = originalText;
                     submitButton.className = originalClasses;
                 }
             } catch (error) {
                 console.error('Error adding to cart:', error);
-                alert('Произошла ошибка при добавлении товара в корзину');
+                showAlert('Произошла ошибка при добавлении товара в корзину', 'error');
                 submitButton.textContent = originalText;
                 submitButton.className = originalClasses;
             } finally {
@@ -401,7 +550,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateQuantityButtons();
                     quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
                 } else {
-                    alert(`Доступно только ${max} шт. на складе`);
+                    showAlert(`Доступно только ${max} шт. на складе`, 'warning');
                 }
             });
         }
@@ -414,14 +563,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // Validate quantity against available stock
             if (currentValue < min) {
                 quantityInput.value = min;
-                alert(`Минимальное количество: ${min}`);
+                showAlert(`Минимальное количество: ${min}`, 'warning');
                 updateQuantityButtons();
                 return;
             }
             
             if (currentValue > max) {
                 quantityInput.value = max;
-                alert(`Доступно только ${max} шт. на складе`);
+                showAlert(`Доступно только ${max} шт. на складе`, 'warning');
                 updateQuantityButtons();
                 return;
             }
@@ -516,7 +665,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     // Show error and revert value
                     const errorMsg = data.error || 'Ошибка при обновлении количества';
-                    alert(errorMsg);
+                    showAlert(errorMsg, 'error');
                     quantityInput.value = originalValue;
                     updateQuantityButtons();
                     
@@ -539,7 +688,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error updating quantity:', error);
-                alert('Произошла ошибка при обновлении количества');
+                showAlert('Произошла ошибка при обновлении количества', 'error');
                 quantityInput.value = originalValue;
             })
             .finally(() => {
@@ -646,10 +795,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (deleteBtn) {
                     deleteBtn.addEventListener('click', event => {
                         event.preventDefault();
+                        const itemId = item.dataset.itemId;
                         const removeUrl = item.dataset.removeUrl;
-                        if (removeUrl) {
-                            window.location.href = removeUrl;
-                        }
+                        removeCartItemById(itemId, removeUrl);
                     });
                 }
 
@@ -710,6 +858,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         setupSwipeActions();
+
+        const removeButtons = document.querySelectorAll('.cart-remove-btn');
+        removeButtons.forEach(button => {
+            button.addEventListener('click', event => {
+                event.preventDefault();
+                const cartItem = button.closest('.cart-item');
+                const itemId = cartItem?.dataset.itemId;
+                const removeUrl = button.dataset.removeUrl || button.getAttribute('href');
+                removeCartItemById(itemId, removeUrl);
+            });
+        });
         // Delivery and payment functions (must be defined before recalculateCartTotals)
         function getDeliveryPrice() {
             const selectedDelivery = document.querySelector('input[name="delivery_type"]:checked');

@@ -1,7 +1,6 @@
 from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from apps.orders.models import OrderItem
 from apps.products.models import Product
@@ -109,6 +108,29 @@ def cart_remove_view(request, item_id):
         **get_order_item_creator_kwark_by_request(request),
     )
     cart_item.delete()
+    # Check if this is an AJAX request
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+        cart_items = get_cart_queryset_by_request(request).select_related('product')
+        total_price = Decimal('0.00')
+        total_discount = Decimal('0.00')
+
+        for item in cart_items:
+            item_total = (item.price or item.product.price) * item.quantity
+            total_price += item_total
+            item_discount = (item.discount or Decimal('0.00')) * item.quantity
+            total_discount += item_discount
+
+        return JsonResponse({
+            'success': True,
+            'removed': True,
+            'cart_count': cart_items.count(),
+            'total_price': str(total_price),
+            'total_discount': str(total_discount),
+            'final_price': str(total_price - total_discount),
+            'empty': cart_items.count() == 0,
+            'message': 'Товар удален из корзины'
+        })
+
     messages.success(request, 'Товар удален из корзины')
     return redirect('market:cart')
 

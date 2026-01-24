@@ -1,0 +1,9 @@
+{% if messages %}
+    <div class="alert-container" role="status" aria-live="polite">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert" data-alert-timeout="4500">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}

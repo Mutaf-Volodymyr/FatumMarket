@@ -11,17 +11,8 @@
 <body>
     {% include 'components/navbar.html' %}
     
+    {% include 'components/alerts.html' %}
     <main class="main-content">
-        {% if messages %}
-            <div class="messages-container">
-                {% for message in messages %}
-                    <div class="message message-{{ message.tags }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-        
         {% block content %}{% endblock %}
     </main>
     
