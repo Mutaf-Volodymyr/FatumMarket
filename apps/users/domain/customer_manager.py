@@ -1,37 +1,89 @@
 from apps.users.domain.schema import UserSchema
 from apps.users.models import User
+from base.manager import BaseManager
 
 
 class CustomerManagerException(Exception):
     pass
 
 
-class CustomerManager:
-    def __init__(self, customer_schema: UserSchema):
-        self.customer_schema = customer_schema
-        self._customer_instance = None
-        self._is_new_user = False
+class CustomerManager(BaseManager):
+    _class_schema = UserSchema
+    _class_model = User
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
 
     @property
-    def customer(self):
-        if self._customer_instance is not None:
-            return self._customer_instance
+    def instance(self):
+        if self._instance is None:
+            if self._instance_pk is not None:
+                self._instance = self._class_model.objects.get(pk=self._instance_pk)
+            elif self.schema is not None:
+                self._instance = self.get_or_create_customer(self.schema)
 
-        if self.customer_schema.id:
-            try:
-                self._customer_instance = User.objects.get(id=self.customer_schema.id)
-            except User.DoesNotExist:
-                raise CustomerManagerException(
-                    f'User with id={self.customer_schema.id} does not exist'
+        return self._instance
+
+    @classmethod
+    def _get_instance_by_schema(cls, schema: _class_schema) -> User | None:
+        instance = None
+        try:
+            if schema.email:
+                instance = cls._class_model.objects.get(
+                    email=schema.email
                 )
-        else:
-            self.create_new_customer()
+            elif schema.phone:
+                instance = cls._class_model.objects.get(
+                    phone=schema.phone
+                )
+        except cls._class_model.DoesNotExist:
+            cls._logger.debug(
+                "_get_instance_by_schema: User not found <phone: %s> <email: %s>",
+                schema.phone, schema.email
+            )
+        return instance
 
-        return self._customer_instance
-
-    def create_new_customer(self):
-        self._customer_instance = User.objects.create_user(
-            **self.customer_schema.model_dump(exclude_unset=True)
+    @classmethod
+    def create_new_customer(cls, schema: _class_schema, activate: bool = False) -> User | None:
+        instance = cls._class_model.objects.create_user(
+            **schema.model_dump(exclude_unset=True),
+            is_active=activate,
         )
-        self._is_new_user = True
-        return self._customer_instance
+        cls._logger.info('User created: %s', instance)
+        if activate:
+            cls._logger.info('User activated: %s', instance)
+
+        return instance
+
+    @classmethod
+    def activate_customer(cls, instance: User) -> User:
+        instance.is_active = True
+        instance.save(update_fields=['is_active'])
+
+        cls._logger.info('User activated: %s', instance)
+
+        return instance
+
+    @classmethod
+    def bun_customer(cls, instance: User) -> User:
+        instance.is_baned = True
+        instance.save(update_fields=['is_baned'])
+
+        cls._logger.info('User was baned: %s', instance)
+
+        return instance
+
+    @classmethod
+    def get_or_create_customer(
+            cls,
+            schema: _class_schema,
+            activate_if_create: bool = False,
+    ) -> User | None:
+
+        instance = cls._get_instance_by_schema(schema)
+        if instance is None:
+            instance = cls.create_new_customer(schema, activate_if_create)
+
+        return instance
+

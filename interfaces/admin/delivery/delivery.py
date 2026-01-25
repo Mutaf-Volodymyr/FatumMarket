@@ -8,11 +8,9 @@ from apps.delivery.models.delivery import Delivery
 
 @admin.register(Delivery)
 class DeliveryAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'delivery_type',  'urgency', 'delivered_at', 'returned')
+    list_display = ('__str__', 'delivery_type',  'delivered_at', 'returned')
     list_filter = (
         ("delivered_at", DateRangeFilter),
-        ("possible_delivery_time_from", DateRangeFilter),
-        ("possible_delivery_time_to", DateRangeFilter),
-        'delivery_type', 'urgency', "returned", 'recipient',
+        'delivery_type',  "returned", 'recipient',
     )
     readonly_fields = ['returned', 'delivered_at',]

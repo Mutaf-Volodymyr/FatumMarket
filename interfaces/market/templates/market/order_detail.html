@@ -7,11 +7,7 @@
 <div class="container">
     <div class="page-header">
         <h1 class="page-title">Заказ #{{ order.id }}</h1>
-        <div class="order-status-badge order-status-{{ order.status }}">
-            {{ order.get_status_display }}
-        </div>
     </div>
-    
     <div class="order-detail">
         <div class="order-info-section">
             <h2>Информация о заказе</h2>
@@ -25,6 +21,62 @@
                 {% if order.delivery %}
                     <dt>Способ доставки:</dt>
                     <dd>{{ order.delivery.get_delivery_type_display }}</dd>
+                {% endif %}
+            </dl>
+            <div class="order-info-divider"></div>
+
+            <dl class="summary-list">
+                <dt>Товаров на сумму:</dt>
+                <dd>{{ order.total_price }} ₴</dd>
+                {% if order.total_discount > 0 %}
+                    <dt>Скидка:</dt>
+                    <dd>-{{ order.total_discount }} ₴</dd>
+                {% endif %}
+                <dt class="total">Итого:</dt>
+                <dd class="total">{{ order.price_with_discount }} ₴</dd>
+            </dl>
+        </div>
+
+        <div class="order-delivery-section">
+            <h2>Доставка и оплата</h2>
+            <dl class="info-list">
+                {% if order.delivery %}
+                    <dt>Способ доставки:</dt>
+                    <dd>{{ order.delivery.get_delivery_type_display }}</dd>
+                    {% if order.delivery.address %}
+                        <dt>Адрес доставки:</dt>
+                        <dd>{{ order.delivery.address }}</dd>
+                    {% endif %}
+                    {% if order.delivery.possible_delivery_date %}
+                        <dt>Дата доставки:</dt>
+                        <dd>{{ order.delivery.possible_delivery_date|date:"d.m.Y" }}</dd>
+                    {% endif %}
+                    {% if order.delivery.possible_delivery_time_from or order.delivery.possible_delivery_time_to %}
+                        <dt>Время доставки:</dt>
+                        <dd>
+                            {% if order.delivery.possible_delivery_time_from %}{{ order.delivery.possible_delivery_time_from|time:"H:i" }}{% endif %}
+                            {% if order.delivery.possible_delivery_time_to %} — {{ order.delivery.possible_delivery_time_to|time:"H:i" }}{% endif %}
+                        </dd>
+                    {% endif %}
+                    {% if order.delivery.recipient %}
+                        <dt>Получатель:</dt>
+                        <dd>{{ order.delivery.recipient }}</dd>
+                    {% elif order.delivery.unknown_recipient %}
+                        <dt>Получатель:</dt>
+                        <dd>{{ order.delivery.unknown_recipient }}</dd>
+                    {% endif %}
+                {% else %}
+                    <dt>Доставка:</dt>
+                    <dd>Не указана</dd>
+                {% endif %}
+                {% if order.payment %}
+                    <dt>Оплата:</dt>
+                    <dd>{{ order.payment.get_payment_method_display }}</dd>
+                    <dt>Статус оплаты:</dt>
+                    <dd>{{ order.payment.get_payment_status_display }}</dd>
+                {% else %}
+                    <dt>Оплата:</dt>
+                    <dd>Не указана</dd>
                 {% endif %}
             </dl>
         </div>
@@ -52,20 +104,6 @@
                     </div>
                 {% endfor %}
             </div>
-        </div>
-        
-        <div class="order-summary-section">
-            <h2>Итого</h2>
-            <dl class="summary-list">
-                <dt>Товаров на сумму:</dt>
-                <dd>{{ order.total_price }} ₴</dd>
-                {% if order.total_discount > 0 %}
-                    <dt>Скидка:</dt>
-                    <dd>-{{ order.total_discount }} ₴</dd>
-                {% endif %}
-                <dt class="total">Итого:</dt>
-                <dd class="total">{{ order.price_with_discount }} ₴</dd>
-            </dl>
         </div>
         
         {% if order.comment %}

@@ -1,76 +1,60 @@
-from decimal import Decimal
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib import messages
+
+from apps.orders.domain.order_item_card_manager import OrderItemCartManager, OrderItemException
 from apps.orders.models import OrderItem
-from apps.products.models import Product
-from interfaces.market.cart_utils import get_cart_queryset_by_request, get_order_item_creator_kwark_by_request
+from interfaces.market.cart_utils import get_cart_queryset_by_request, get_order_item_creator_kwark_by_request, \
+    make_new_summary_price_context
 
 
 def cart_view(request):
     cart_items = get_cart_queryset_by_request(
        request
-    ).select_related('product').prefetch_related('product__images')
+    ).select_related('product', "product__brand").prefetch_related('product__images')
 
-    total_price = Decimal('0.00')
-    total_discount = Decimal('0.00')
+    summary_price_context = make_new_summary_price_context(cart_items)
 
-    for item in cart_items:
-        item_total = (item.price or item.product.price) * item.quantity
-        total_price += item_total
-        item_discount = (item.discount or Decimal('0.00')) * item.quantity
-        total_discount += item_discount
-
-    return render(request, 'market/cart.html', {
-        'cart_items': cart_items,
-        'total_price': total_price,
-        'total_discount': total_discount,
-        'final_price': total_price - total_discount,
-    })
+    return render(request, 'market/cart.html', summary_price_context)
 
 
 def cart_add_view(request, product_id):
     """Add product to cart"""
     if request.method == 'POST':
-        product = get_object_or_404(Product, id=product_id, is_active=True)
-        quantity = int(request.POST.get('quantity', 1))
-        
-        if quantity < 1:
-            quantity = 1
-        
-        # Check if product already in cart
-        cart_item = get_cart_queryset_by_request(
-               request
-            ).filter(product=product).first()
-        
-        success = False
+
+        success = True
         error_message = None
-        
-        if cart_item:
-            # Update quantity
-            new_quantity = cart_item.quantity + quantity
-            if new_quantity > product.quantity:
-                error_message = f'Недостаточно товара на складе. Доступно: {product.quantity}'
+
+        quantity = int(request.POST.get('quantity', 1))
+
+        cart_queryset = get_cart_queryset_by_request(request)
+        cart_item = cart_queryset.filter(product_id=product_id).first()
+
+        try:
+            if cart_item:
+                manager = OrderItemCartManager(instance=cart_item)
+                manager.update_quantity(quantity)
             else:
-                cart_item.quantity = new_quantity
-                cart_item.save()
-                success = True
-        else:
-            # Create new cart item
-            if quantity > product.quantity:
-                error_message = f'Недостаточно товара на складе. Доступно: {product.quantity}'
-            else:
-                OrderItem.objects.create(
-                    **get_order_item_creator_kwark_by_request(request),
-                    product=product,
-                    quantity=quantity,
-                    status=OrderItem.OrderItemStatus.CARD
+                manager = OrderItemCartManager(
+                    data={
+                        'quantity': quantity,
+                        'product_id': product_id,
+                        **get_order_item_creator_kwark_by_request(request)
+                    }
                 )
-                success = True
-        
+                manager.create_cart()
+
+        except OrderItemException as e:
+            error_message = str(e)
+            success = False
+
+        except Exception as e:
+            error_message = "Неизвестная ошибка"
+            success = False
+
         # Check if this is an AJAX request
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
-            # Get updated cart count
             cart_count = get_cart_queryset_by_request(request).count()
             
             if success:
@@ -85,12 +69,10 @@ def cart_add_view(request, product_id):
                     'error': error_message,
                     'cart_count': cart_count
                 }, status=400)
-        
-        # Regular form submission - redirect (messages removed, using AJAX instead)
+
         if not success:
             messages.error(request, error_message)
-        
-        # Redirect back to the same page (use HTTP_REFERER or home)
+
         referer = request.META.get('HTTP_REFERER')
         if referer:
             return redirect(referer)
@@ -107,29 +89,24 @@ def cart_remove_view(request, item_id):
         status=OrderItem.OrderItemStatus.CARD,
         **get_order_item_creator_kwark_by_request(request),
     )
-    cart_item.delete()
+    manager = OrderItemCartManager(instance=cart_item)
+    manager.delete_cart()
+
     # Check if this is an AJAX request
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
         cart_items = get_cart_queryset_by_request(request).select_related('product')
-        total_price = Decimal('0.00')
-        total_discount = Decimal('0.00')
 
-        for item in cart_items:
-            item_total = (item.price or item.product.price) * item.quantity
-            total_price += item_total
-            item_discount = (item.discount or Decimal('0.00')) * item.quantity
-            total_discount += item_discount
+        summary_price_context = make_new_summary_price_context(cart_items, serializable=True)
 
-        return JsonResponse({
-            'success': True,
-            'removed': True,
-            'cart_count': cart_items.count(),
-            'total_price': str(total_price),
-            'total_discount': str(total_discount),
-            'final_price': str(total_price - total_discount),
-            'empty': cart_items.count() == 0,
-            'message': 'Товар удален из корзины'
-        })
+        summary_price_context.update(
+            {
+                'success': True,
+                'removed': True,
+                'empty': cart_items.count() == 0,
+                'message': 'Товар удален из корзины'
+            }
+        )
+        return JsonResponse(summary_price_context)
 
     messages.success(request, 'Товар удален из корзины')
     return redirect('market:cart')
@@ -146,52 +123,41 @@ def cart_update_view(request, item_id):
             **get_order_item_creator_kwark_by_request(request),
         )
         quantity = int(request.POST.get('quantity', 1))
-        
-        success = False
-        error_message = None
-        removed = False
-        
-        if quantity < 1:
-            cart_item.delete()
-            removed = True
+
+        try:
+            manager = OrderItemCartManager(instance=cart_item)
+            new_quantity = manager.update_quantity(quantity)
+
             success = True
-        elif quantity > cart_item.product.quantity:
-            error_message = f'Недостаточно товара на складе. Доступно: {cart_item.product.quantity}'
-        else:
-            cart_item.quantity = quantity
-            cart_item.save()
-            success = True
+            error_message = None
+            removed = new_quantity == 0
+
+        except OrderItemCartManager as e:
+            error_message = str(e)
+            success = False
+            removed = False
         
         # Check if this is an AJAX request
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
-            # Calculate updated totals
             cart_items = get_cart_queryset_by_request(request).select_related('product')
             
-            total_price = Decimal('0.00')
-            total_discount = Decimal('0.00')
-            
-            for item in cart_items:
-                item_total = (item.price or item.product.price) * item.quantity
-                total_price += item_total
-                item_discount = (item.discount or Decimal('0.00')) * item.quantity
-                total_discount += item_discount
+            summary_price_context = make_new_summary_price_context(cart_items, serializable=True)
+            summary_price_context.update(
+                {
+                    'success': success,
+                    'removed': removed,
+                }
+            )
             
             if success:
-                return JsonResponse({
-                    'success': True,
-                    'removed': removed,
-                    'total_price': str(total_price),
-                    'total_discount': str(total_discount),
-                    'final_price': str(total_price - total_discount),
-                    'cart_count': cart_items.count()
-                })
+                return JsonResponse(summary_price_context)
             else:
                 return JsonResponse({
-                    'success': False,
+                    'success': success,
                     'error': error_message
                 }, status=400)
         
-        # Regular form submission - redirect
+
         if not success:
             messages.error(request, error_message)
         elif removed:

@@ -145,20 +145,13 @@ class SignupForm(forms.Form):
         # Создаем пользователя
         if login_type == 'email':
             user = User.objects.create_user(
-                phone=None,  # Временно, но phone обязателен в модели
+                username=login_value,
                 email=login_value,
             )
-            # Нужно установить phone, так как он обязателен
-            # Генерируем уникальный placeholder
-            import uuid
-            base_phone = f"+380{str(uuid.uuid4())[:8].replace('-', '')}"
-            while User.objects.filter(phone=base_phone).exists():
-                base_phone = f"+380{str(uuid.uuid4())[:8].replace('-', '')}"
-            user.phone = base_phone
         else:  # phone
             user = User.objects.create_user(
+                username=login_value,
                 phone=login_value,
-                email=None,
             )
         
         user.set_password(password)

@@ -1,13 +1,13 @@
-from django.core.exceptions import ValidationError
+
 from django.db import models
 
-from base.for_model import BaseModel, AuditMixin
+from base.for_model import BaseModel
 from django.utils.translation import gettext_lazy as _
 
 
 __all__ = ['SpecificationName', 'SpecificationValue',]
 
-class SpecificationName(AuditMixin):
+class SpecificationName(BaseModel):
     name = models.CharField(max_length=255, verbose_name=_("Название"))
     position = models.IntegerField(default=100, verbose_name=_("Position"))
     unit_measurement = models.CharField(
@@ -16,6 +16,7 @@ class SpecificationName(AuditMixin):
         blank=True,
         verbose_name=_("Единица измерения"),
     )
+    filter_hide = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'specification_name'
@@ -30,7 +31,7 @@ class SpecificationName(AuditMixin):
 
 
 
-class SpecificationValue(AuditMixin):
+class SpecificationValue(BaseModel):
     specification_name = models.ForeignKey(
         SpecificationName,
         on_delete=models.CASCADE,

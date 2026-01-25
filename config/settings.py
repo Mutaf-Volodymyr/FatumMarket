@@ -59,12 +59,7 @@ INSTALLED_APPS = [
     "apps.delivery"
 ]
 
-if DEBUG:
-    INSTALLED_APPS.append("debug_toolbar")
 
-    DEBUG_TOOLBAR_CONFIG = {
-        "SHOW_TOOLBAR_CALLBACK": lambda request: True,
-    }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -76,6 +71,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+if DEBUG:
+    INSTALLED_APPS.append("debug_toolbar")
+
+    DEBUG_TOOLBAR_CONFIG = {
+        "SHOW_TOOLBAR_CALLBACK": lambda request: True,
+    }
+    MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
 
 ROOT_URLCONF = 'config.urls'
 
@@ -186,7 +189,11 @@ CORS_ALLOW_CREDENTIALS = True
 
 AUTH_USER_MODEL = 'users.User'
 
-GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY')
+
+MARKET_EMAIL = os.getenv("MARKET_EMAIL", 'mutaf.biz@gmail.com')
+MARKET_PHONE =os.getenv("MARKET_PHONE", '+37369096576')
+NOMINATIM_USER_AGENT = "FatumMarket (contact: %s)" % MARKET_EMAIL
+
 
 # Authentication settings
 LOGIN_REDIRECT_URL = '/'
@@ -197,3 +204,11 @@ AUTHENTICATION_BACKENDS = [
     'apps.users.backends.PhoneOrEmailBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+# Celery
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://fatum-redis:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://fatum-redis:6379/1")
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"

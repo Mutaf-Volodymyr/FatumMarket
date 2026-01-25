@@ -9,7 +9,7 @@ def brand_list_view(request):
     
     # Пагинация
     page = request.GET.get('page', 1)
-    paginator = Paginator(brands, 20)  # 20 брендов на странице
+    paginator = Paginator(brands, 20)
     try:
         brands_page = paginator.page(page)
     except PageNotAnInteger:

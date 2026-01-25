@@ -57,7 +57,7 @@ class Product(BaseModel, SlugMixin):
             return Decimal('0.00')
         if not self.old_price:
             return Decimal('0.00')
-        discount = (self.old_price - self.price) / self.price
+        discount = (self.old_price - self.price) / self.old_price
         return Decimal(discount * 100).quantize(Decimal('0.01'))
 
     @property
@@ -123,7 +123,7 @@ class ProductSpecification(BaseModel):
         verbose_name=_("Название спецификации"),
         editable=False,
     )
-    # filter_hide = models.BooleanField(default=False)
+
 
     def save(self, *args, **kwargs):
         if self.specification_name_id is None:

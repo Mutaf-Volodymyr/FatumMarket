@@ -1,4 +1,4 @@
-from apps.orders.domian.schema import PaymentSchema
+from apps.orders.domain.schema import PaymentSchema
 from apps.orders.models import Order, OrderPayment
 
 

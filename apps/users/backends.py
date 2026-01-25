@@ -1,5 +1,6 @@
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from phonenumbers import parse, NumberParseException
 from phonenumbers import format_number, PhoneNumberFormat
 
@@ -12,41 +13,27 @@ class PhoneOrEmailBackend(ModelBackend):
     """
     
     def authenticate(self, request, username=None, password=None, **kwargs):
-        if username is None:
-            username = kwargs.get('phone') or kwargs.get('email')
-        
         if username is None or password is None:
             return None
-        
-        user = None
-        
-        # Определяем, является ли это email или телефон
-        if '@' in username:
-            # Это email
+        login_value = username.strip()
+        query = Q(username=login_value) | Q(email=login_value)
+
+        if '@' not in login_value:
             try:
-                user = User.objects.get(email=username)
-            except User.DoesNotExist:
-                return None
-        else:
-            # Пробуем как телефон
-            try:
-                parsed = parse(username, None)
-                if parsed:
-                    normalized = format_number(parsed, PhoneNumberFormat.E164)
-                    try:
-                        user = User.objects.get(phone=normalized)
-                    except User.DoesNotExist:
-                        # Попробуем найти по частичному совпадению
-                        try:
-                            user = User.objects.get(phone__icontains=username.replace('+', '').replace('-', '').replace(' ', ''))
-                        except (User.DoesNotExist, User.MultipleObjectsReturned):
-                            return None
-            except (NumberParseException, Exception):
-                return None
-        
-        if user and user.check_password(password):
+                parsed = parse(login_value, None)
+                normalized = format_number(parsed, PhoneNumberFormat.E164)
+                query = query | Q(phone=normalized) | Q(username=normalized)
+                login_value = normalized
+            except NumberParseException:
+                query = query | Q(phone=login_value)
+
+        try:
+            user = User.objects.get(query)
+        except User.DoesNotExist:
+            return None
+
+        if user.check_password(password) and self.user_can_authenticate(user):
             return user
-        
         return None
     
     def get_user(self, user_id):

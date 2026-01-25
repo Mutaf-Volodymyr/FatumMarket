@@ -13,9 +13,6 @@ class Delivery(BaseModel):
         courier = 'courier', _('Курьер')
         nova_posta = 'nova_posta', _('Nova Posta')
 
-    class SpeedChoices(models.TextChoices):
-        URGENCY = 'quickly', _("Срочно")
-        STANDARD = "standard", _("Стандартно")
 
     class ReturnChoices(models.TextChoices):
         FULL = 'full', _('Полный')
@@ -35,28 +32,13 @@ class Delivery(BaseModel):
         null=True,
         blank=True,
     )
-    unknown_recipient = models.TextField(null=True, blank=True, verbose_name=_("Неизвестный получатель"))
-
     # куда
     delivery_type = models.CharField(max_length=100, choices=DeliveryTypeChoices.choices, default=DeliveryTypeChoices.pickup, verbose_name=_('Способ доставки'),)
     address = models.ForeignKey('address.Address', on_delete=models.PROTECT, verbose_name=_('Адрес'), null=True, blank=True)
     comment = models.TextField(null=True, blank=True, verbose_name=_('Комментарий'))
 
-    # когда
-    urgency = models.CharField(max_length=100, choices=SpeedChoices.choices, default=SpeedChoices.STANDARD, verbose_name=_('Срочность'))
-    possible_delivery_time_from = models.DateTimeField(
-        verbose_name=_("Доставка от"),
-        null=True, blank=True,
-        help_text=_('Желаемое время доставки указанное клиентом')
-    )
-    possible_delivery_time_to = models.DateTimeField(
-        verbose_name=_("Доставка до"),
-        null=True, blank=True,
-        help_text=_('Желаемое время доставки указанное клиентом')
-    )
-
     # how money
-    delivery_cost = PriceField(verbose_name=_('Стоимость доставки'))
+    delivery_cost = PriceField(verbose_name=_('Стоимость доставки'), null=True, blank=True)
 
     # result
     is_delivered = models.BooleanField(default=False, verbose_name=_('Доставлено'))

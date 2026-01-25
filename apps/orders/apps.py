@@ -4,3 +4,7 @@ from django.apps import AppConfig
 class OrdersConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'apps.orders'
+
+    def ready(self):
+        from apps.orders import signals
+        from interfaces.admin import orders

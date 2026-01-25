@@ -1,5 +1,6 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -23,19 +24,19 @@ class UserStatuses(models.TextChoices):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, phone, password=None, **extra_fields):
-        if not phone:
-            raise ValueError(_("Phone number is required"))
+    def create_user(self, username=None, password=None, **extra_fields):
+        username = username or extra_fields.get('username') or extra_fields.get('phone') or extra_fields.get('email')
+        if not username:
+            raise ValueError(_("Username, phone number or email is required"))
 
-        phone = phone
-
-        user = self.model(phone=phone, **extra_fields)
+        extra_fields.setdefault('username', username)
+        user = self.model(**extra_fields)
         user.set_password(password)
         user.clean()
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone, password=None, **extra_fields):
+    def create_superuser(self, username=None, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
@@ -47,19 +48,28 @@ class UserManager(BaseUserManager):
         if extra_fields.get("is_superuser") is not True:
             raise ValueError(_("Superuser must have is_superuser=True."))
 
-        return self.create_user(phone, password, **extra_fields)
+        return self.create_user(username, password, **extra_fields)
 
 
 class User(AbstractUser, BaseModel):
-    username = None
+    username_validator = UnicodeUsernameValidator()
+    username = models.CharField(
+        _("Аутентификатор пользователя"),
+        max_length=150,
+        unique=True,
+        validators=[username_validator],
+        help_text=_("Используется для входа (email или телефон)"),
+        error_messages={"unique": _("Пользователь с таким email или phone уже существует.")},
+    )
 
     # персональная информация
-    first_name = models.CharField(_("Имя"), max_length=50, blank=True)
-    last_name = models.CharField(_("Фамилия"), max_length=50, blank=True)
+    first_name = models.CharField(_("Имя"), max_length=50, blank=True, default='')
+    last_name = models.CharField(_("Фамилия"), max_length=50, blank=True, default='')
     # контакты
-    email = models.EmailField(blank=True, null=True, verbose_name=_("Email") )
-    phone = PhoneNumberField(unique=True, verbose_name=_('Номер телефона'))
-    telegram_id = models.CharField(max_length=50, blank=True, verbose_name=_("Телеграм ID"))
+    email = models.EmailField(blank=True, null=True, verbose_name=_("Email"), unique=True)
+    phone = PhoneNumberField(unique=True, verbose_name=_('Номер телефона'), blank=True, null=True)
+
+    telegram_id = models.CharField(max_length=50, blank=True, verbose_name=_("Телеграм ID"), null=True)
     addresses = models.ManyToManyField("address.Address", blank=True, verbose_name=_("Адреса"))
     # статусы
     staff_status = models.CharField(
@@ -78,11 +88,8 @@ class User(AbstractUser, BaseModel):
         verbose_name = _("Пользователь")
         verbose_name_plural = _("Пользователи")
 
-
-
     STATUSES = UserStatuses
-    EMAIL_FIELD = "email"
-    USERNAME_FIELD = "phone"
+    USERNAME_FIELD = "username"
     REQUIRED_FIELDS = []
     objects = UserManager()
 
@@ -95,5 +102,5 @@ class User(AbstractUser, BaseModel):
 
     def __str__(self):
         if self.is_staff:
-            return f"{self.first_name} {self.last_name} [{self.staff_status}]"
-        return str(self.phone)
+            return f"{self.username} [{self.staff_status}]"
+        return str(self.username)

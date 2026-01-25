@@ -85,7 +85,6 @@
             </div>
             
             <div class="product-detail-actions">
-                {% if user.is_authenticated %}
                     <form method="post" action="{% url 'market:cart_add' product.id %}" class="product-add-form" data-product-id="{{ product.id }}">
                         {% csrf_token %}
                         <div class="quantity-selector">
@@ -97,9 +96,7 @@
                             {% if product.in_cart %}В корзине{% else %}Добавить в корзину{% endif %}
                         </button>
                     </form>
-                {% else %}
-                    <p><a href="{% url 'auth:login' %}">Войдите</a> чтобы добавить товар в корзину</p>
-                {% endif %}
+
             </div>
         </div>
     </div>

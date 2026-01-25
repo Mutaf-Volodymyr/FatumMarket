@@ -4,6 +4,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
+import ulid
 
 try:
     from unidecode import unidecode
@@ -25,9 +26,19 @@ except ImportError:
         return ''.join(translit_map.get(char, char) for char in text)
 
 
-class AuditMixin(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True, editable=False, verbose_name=_('Создано'))
-    updated_at = models.DateTimeField(auto_now=True, editable=False, verbose_name=_('Обновлено'))
+
+
+class BaseModel(models.Model):
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        editable=False,
+        verbose_name=_('Создано'),
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        editable=False,
+        verbose_name=_('Обновлено'),
+    )
 
     def __str__(self):
         name = getattr(self, 'name', None)
@@ -42,12 +53,6 @@ class AuditMixin(models.Model):
     def get_fields_list(cls):
         return [field.name for field in cls._meta.fields]
 
-class BaseModel(AuditMixin):
-
-    history = HistoricalRecords(user_model='users.User', inherit=True)
-
-    class Meta:
-        abstract = True
 
 
 class SlugMixin(models.Model):
@@ -60,10 +65,10 @@ class SlugMixin(models.Model):
         null=True,
         blank=True,
     )
-    
+
     class Meta:
         abstract = True
-    
+
     def save(self, *args, **kwargs):
         if not self.slug:
             # Получаем значение name
@@ -75,22 +80,22 @@ class SlugMixin(models.Model):
                 base_slug = slugify(transliterated)
                 unique_slug = base_slug
                 num = 1
-                
+
                 # Проверяем уникальность slug
                 model_class = self.__class__
                 while model_class.objects.filter(slug=unique_slug).exclude(pk=self.pk).exists():
                     unique_slug = f"{base_slug}-{num}"
                     num += 1
-                
+
                 self.slug = unique_slug
         super().save(*args, **kwargs)
 
 
 class PriceField(models.DecimalField):
     def __init__(
-        self,
-        verbose_name=None,
-        **kwargs,
+            self,
+            verbose_name=None,
+            **kwargs,
     ):
         kwargs.setdefault('max_digits', 12)
         kwargs.setdefault('decimal_places', 2)
@@ -102,9 +107,26 @@ class PriceField(models.DecimalField):
 
 class PositionField(models.PositiveIntegerField):
     def __init__(
-        self,
-        **kwargs,
+            self,
+            **kwargs,
     ):
         kwargs.setdefault('verbose_name', _('Позиция'))
         kwargs.setdefault('default', 0)
         super().__init__(**kwargs)
+
+
+def generate_ulid():
+    return ulid.new().str
+
+
+class UlidPrimaryKeyMixin(models.Model):
+    id = models.CharField(
+        max_length=26,
+        default=generate_ulid,
+        primary_key=True,
+        null=False,
+        editable=False,
+    )
+
+    class Meta:
+        abstract = True

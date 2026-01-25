@@ -2,7 +2,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import JSONField
 from django.utils.translation import gettext_lazy as _
-from base.for_model import BaseModel, PriceField
+from base.for_model import BaseModel, PriceField, UlidPrimaryKeyMixin
 from config import settings
 from django.contrib.sessions.models import Session
 
@@ -10,13 +10,11 @@ __all__ = ['Order', 'OrderItem', 'OrderPayment']
 
 
 
-class Order(BaseModel):
+class Order(BaseModel, UlidPrimaryKeyMixin):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         verbose_name=_('Клиент'),
-        null=True,
-        blank=True
     )
     session = models.ForeignKey(
         Session,
@@ -92,7 +90,7 @@ class OrderItem(BaseModel):
     )
 
     class OrderItemStatus(models.TextChoices):
-        CARD = 'card', _("Корзина")
+        CARD = 'cart', _("Корзина")
         ORDER = 'order', _("Заказ")
 
     status = models.CharField(
@@ -152,7 +150,7 @@ class OrderPayment(BaseModel):
 
     class PaymentMethodChoices(models.TextChoices):
         CASH = 'cash', _('Наличная')
-        CARD = 'paid', _('Безналичная')
+        CASHLESS = 'cashless', _('Безналичная')
 
     payment_method = models.CharField(
         max_length=100,

@@ -7,6 +7,7 @@ from collections import defaultdict
 from apps.products.models import Product, Category, Brand, SpecificationValue
 from apps.products.domain.product_filters import ProductFiltersBuilder
 from apps.orders.models import OrderItem
+from interfaces.market.cart_utils import annotate_product_in_carts_by_request
 
 
 def _get_pagination_url(request, page):
@@ -115,21 +116,15 @@ def product_list_view(request):
     else:
         # Default sorting (by creation date, newest first)
         products = products.order_by('-created_at')
-    
-    # Annotate products with cart status if user is authenticated
-    if request.user.is_authenticated:
-        cart_items = OrderItem.objects.filter(
-            user=request.user,
-            status=OrderItem.OrderItemStatus.CARD,
-            product=OuterRef('pk')
-        )
-        products = products.annotate(in_cart=Exists(cart_items))
-    else:
-        products = products.annotate(in_cart=Value(False, output_field=BooleanField()))
-    
+
+    products = annotate_product_in_carts_by_request(
+        request=request,
+        product=products
+    )
+
     # Pagination (after all filters and sorting)
     total_products_count = products.count()
-    paginator = Paginator(products, 12)  # 12 товаров на странице
+    paginator = Paginator(products, 12)
     try:
         products_page = paginator.page(page)
     except PageNotAnInteger:
@@ -167,15 +162,10 @@ def product_detail_view(request, slug):
     ).filter(is_active=True)
     
     # Annotate with cart status if user is authenticated
-    if request.user.is_authenticated:
-        cart_items = OrderItem.objects.filter(
-            user=request.user,
-            status=OrderItem.OrderItemStatus.CARD,
-            product=OuterRef('pk')
-        )
-        product_queryset = product_queryset.annotate(in_cart=Exists(cart_items))
-    else:
-        product_queryset = product_queryset.annotate(in_cart=Value(False, output_field=BooleanField()))
+    product_queryset = annotate_product_in_carts_by_request(
+        request=request,
+        product=product_queryset
+    )
     
     product = get_object_or_404(product_queryset, slug=slug)
     

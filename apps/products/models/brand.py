@@ -1,11 +1,11 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from base.for_model import AuditMixin, SlugMixin
+from base.for_model import BaseModel, SlugMixin
 
 
 __all__ = ['Brand']
 
-class Brand(AuditMixin, SlugMixin):
+class Brand(BaseModel, SlugMixin):
 
     name = models.CharField(max_length=255, verbose_name=_("Название"))
     description = models.TextField(null=True, blank=True, verbose_name=_('Описание'))
@@ -15,7 +15,6 @@ class Brand(AuditMixin, SlugMixin):
         blank=True,
         verbose_name=_('Изображение')
     )
-
 
     class Meta:
         verbose_name = _("Бренд")
