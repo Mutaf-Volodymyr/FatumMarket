@@ -68,20 +68,20 @@ services:
     networks:
       - fatum-net
 
-  celery-beat:
-    image: python:3.13-slim
-    working_dir: /app
-    restart: unless-stopped
-    command: sh -c "pip install . && celery -A config beat -l info"
-    volumes:
-      - ../../:/app
-    env_file:
-      - ./.env
-    depends_on:
-      - fatum-redis
-      - fatum-database
-    networks:
-      - fatum-net
+#  celery-beat:
+#    image: python:3.13-slim
+#    working_dir: /app
+#    restart: unless-stopped
+#    command: sh -c "pip install . && celery -A config beat -l info"
+#    volumes:
+#      - ../../:/app
+#    env_file:
+#      - ./.env
+#    depends_on:
+#      - fatum-redis
+#      - fatum-database
+#    networks:
+#      - fatum-net
 
 volumes:
   fatum-static:
