@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'corsheaders',
-    'django_google_maps',
     "mptt",
     'django_filters',
     'rangefilter',
