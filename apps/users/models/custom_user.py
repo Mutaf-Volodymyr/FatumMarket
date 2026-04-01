@@ -28,7 +28,7 @@ class UserManager(BaseUserManager):
         email = extra_fields.get("email")
         phone = extra_fields.get("phone")
         if email in ("", None):
-            extra_fields.pop("email")
+            extra_fields.pop("email", None)
         if phone in ("", None):
             extra_fields["phone"] = None
 
