@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
+    "django.contrib.postgres",
     # Third party apps
     "rest_framework",
     "corsheaders",
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
     "apps.supply",
     "apps.address",
     "apps.delivery",
+    "interfaces.telegram.tg_actions",
 ]
 
 

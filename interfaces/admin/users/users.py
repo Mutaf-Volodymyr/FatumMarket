@@ -34,17 +34,20 @@ class UserOrderItemInlines(CardInlines):
 class CustomUserAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "username",
-        "phone",
-        "email",
         "first_name",
         "last_name",
+        "username",
         "is_staff",
         "is_active",
         "is_baned",
         "last_login",
     )
-    list_display_links = ("id", "first_name", "last_name")
+    list_display_links = (
+        "id",
+        "first_name",
+        "last_name",
+        "username",
+    )
     search_fields = ("phone", "email", "first_name", "last_name")
     list_filter = (
         "is_staff",

@@ -24,10 +24,11 @@ services:
     working_dir: /app
     restart: unless-stopped
     command: >
-      sh -c "pip install . gunicorn &&
+      sh -c "rm -rf build/ &&
+             pip install . gunicorn supervisor &&
              python manage.py collectstatic --noinput &&
              python manage.py migrate &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 1 --timeout 120"
+             supervisord -n -c /app/config/docker/supervisord.conf"
     volumes:
       - ../../:/app
       - fatum-static:/app/staticfiles
@@ -58,7 +59,7 @@ services:
     image: python:3.13-slim
     working_dir: /app
     restart: unless-stopped
-    command: sh -c "pip install . && celery -A config worker -l info"
+    command: sh -c "rm -rf build/ && pip install . && celery -A config worker -l info"
     volumes:
       - ../../:/app
       - fatum-media:/app/media

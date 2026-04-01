@@ -1,21 +1,22 @@
+COMPOSE = docker compose --file config/docker/docker-compose.yaml -p fatum_market
+
 build:
-	docker compose --file config/docker/docker-compose.yaml -p fatum_market build
+	$(COMPOSE) build
 
 dev:
-	docker compose --file config/docker/docker-compose.yaml up
+	$(COMPOSE) up
 
 devbuild:
-	docker compose --file config/docker/docker-compose.yaml -p fatum_market up --build
+	$(COMPOSE) up --build
 
 exec:
-	docker compose --file config/docker/docker-compose.yaml exec webapp bash
+	$(COMPOSE) exec fatum-web bash
 
 shell:
-	docker compose --file config/docker/docker-compose.yaml run --rm --entrypoint /bin/bash webapp
+	$(COMPOSE) run --rm --entrypoint /bin/bash fatum-web
 
 down:
-	docker compose --file config/docker/docker-compose.yaml down
+	$(COMPOSE) down
 
 restart:
-	docker compose --file config/docker/docker-compose.yaml restart
-
+	$(COMPOSE) restart

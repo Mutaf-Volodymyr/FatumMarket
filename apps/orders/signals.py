@@ -9,6 +9,12 @@ from apps.orders.models import Order, OrderItem
 from apps.products.models import Product
 
 
+def _notify_order(order_pk: str) -> None:
+    from interfaces.telegram.tg_actions.tasks import task_notify_new_order
+
+    task_notify_new_order.delay(order_pk)
+
+
 @receiver(pre_save, sender=Order, dispatch_uid="pre_save:track_order_status")
 def track_order_status(sender: type, instance: Order, **kwargs: Any) -> None:
     if not instance.pk:
@@ -71,3 +77,6 @@ def create_order_logic(
         # Обновление
         OrderItem.objects.bulk_update(items, fields=["price", "discount", "product_name", "status"])
         Product.objects.bulk_update(products, fields=["quantity"])
+
+    order_pk = str(instance.pk)
+    transaction.on_commit(lambda: _notify_order(order_pk))
