@@ -1,1 +1,1 @@
-from .supply import SupplyAdmin, Supplier
+from .supply import Supplier, SupplyAdmin

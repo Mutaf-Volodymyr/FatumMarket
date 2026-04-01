@@ -22,15 +22,17 @@ class AddressManager(BaseManager):
         result = []
 
         for address in addresses:
-            result.append(cls._read_class_schema(
-                id=address.id,
-                city=address.city,
-                street=address.street,
-                house=address.house,
-                latitude=address.latitude,
-                longitude=address.longitude,
-                is_validated=address.is_validated,
-            ))
+            result.append(
+                cls._read_class_schema(
+                    id=address.id,
+                    city=address.city,
+                    street=address.street,
+                    house=address.house,
+                    latitude=address.latitude,
+                    longitude=address.longitude,
+                    is_validated=address.is_validated,
+                )
+            )
 
         return result
 
@@ -48,7 +50,7 @@ class AddressManager(BaseManager):
     def create_new_address(cls, schema: CreateAddressSchema) -> Address:
         data = cls._clean_schema_data(schema)
         instance = cls._class_model.objects.create(**data)
-        cls._logger.info('Address created: %s', instance)
+        cls._logger.info("Address created: %s", instance)
         return instance
 
     @property
@@ -65,11 +67,12 @@ class AddressManager(BaseManager):
         if self.instance is not None:
             user.addresses.add(self.instance)
             self._logger.info(
-                'User %s associated with Address: %s',
-                user, self.instance,
+                "User %s associated with Address: %s",
+                user,
+                self.instance,
             )
             return
-        self._logger.info('Address not found')
+        self._logger.info("Address not found")
 
     @classmethod
     def _clean_schema_data(cls, schema: CreateAddressSchema) -> dict:

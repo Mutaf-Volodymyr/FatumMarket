@@ -5,11 +5,10 @@ from django.shortcuts import redirect, render
 
 from apps.orders.domain.order_creator import OrderCreator, OrderCreatorException
 from apps.orders.domain.order_item_card_manager import OrderItemCartManager, OrderItemException
-from apps.products.models import Product, Category, Brand
+from apps.products.models import Brand, Category, Product
 from apps.users.domain.customer_manager import CustomerManager
 from apps.users.domain.schema import UserSchema
 from apps.users.models import UserStatuses
-
 
 ALLOWED_STAFF_STATUSES = {
     UserStatuses.MANAGER,
@@ -26,17 +25,21 @@ def _require_staff_permission(view_func):
         if request.user.staff_status not in ALLOWED_STAFF_STATUSES:
             return HttpResponseForbidden("Недостаточно прав")
         return view_func(request, *args, **kwargs)
+
     return wrapper
 
 
 @login_required
 @_require_staff_permission
 def staff_create_order_view(request):
-    products = Product.objects.filter(is_active=True).select_related("category", "brand").order_by("name")
+    products = (
+        Product.objects.filter(is_active=True).select_related("category", "brand").order_by("name")
+    )
     categories = Category.objects.all().order_by("name")
     brands = Brand.objects.all().order_by("name")
 
     if request.method == "POST":
+
         def _clean(value):
             if value is None:
                 return None
@@ -53,11 +56,13 @@ def staff_create_order_view(request):
             messages.error(request, "Укажите телефон заказчика")
             return redirect("market:staff_create_order")
 
-        customer_schema = UserSchema.model_validate({
-            "first_name": customer_first_name,
-            "last_name": customer_last_name,
-            "phone": customer_phone,
-        })
+        customer_schema = UserSchema.model_validate(
+            {
+                "first_name": customer_first_name,
+                "last_name": customer_last_name,
+                "phone": customer_phone,
+            }
+        )
         customer = CustomerManager.get_or_create_customer(customer_schema)
         if customer is None:
             messages.error(request, "Не удалось создать заказчика")
@@ -106,11 +111,13 @@ def staff_create_order_view(request):
                     manager.update_quantity(existing_cart.quantity + quantity)
                     cart_items.append(existing_cart)
                 else:
-                    manager = OrderItemCartManager(data={
-                        "user_id": customer.id,
-                        "product_id": product_id,
-                        "quantity": quantity,
-                    })
+                    manager = OrderItemCartManager(
+                        data={
+                            "user_id": customer.id,
+                            "product_id": product_id,
+                            "quantity": quantity,
+                        }
+                    )
                     cart_items.append(manager.create_cart())
         except (OrderItemException, ValueError) as exc:
             messages.error(request, f"Ошибка по товарам: {exc}")
@@ -140,8 +147,12 @@ def staff_create_order_view(request):
         messages.success(request, f"Заказ {order.id} создан")
         return redirect("market:order_success", order_id=order.id)
 
-    return render(request, "market/staff_create_order.html", {
-        "products": products,
-        "categories": categories,
-        "brands": brands,
-    })
+    return render(
+        request,
+        "market/staff_create_order.html",
+        {
+            "products": products,
+            "categories": categories,
+            "brands": brands,
+        },
+    )

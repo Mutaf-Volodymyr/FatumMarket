@@ -1,6 +1,7 @@
 from django.contrib import admin
+
 from apps.delivery.models import Delivery
-from apps.orders.models import Order, OrderPayment, OrderItem
+from apps.orders.models import Order, OrderItem, OrderPayment
 
 
 class OrderPaymentInline(admin.StackedInline):
@@ -15,12 +16,7 @@ class OrderItemInline(admin.TabularInline):
     can_delete = False
     can_edit = False
     extra = 0
-    fields = [
-        'product',
-        'quantity',
-        'price',
-        'discount'
-    ]
+    fields = ["product", "quantity", "price", "discount"]
     readonly_fields = fields
 
 
@@ -32,31 +28,34 @@ class DeliveryInline(admin.StackedInline):
     readonly_fields = Delivery.get_fields_list()
 
 
-
-
-
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", 'user' , 'status', 'total_price', 'created_at')
+    list_display = ("id", "user", "status", "total_price", "created_at")
     fields = [
         "id",
-        'user',
-        'total_price',
-        'total_discount',
-        'comment',
-        'status',
+        "user",
+        "total_price",
+        "total_discount",
+        "comment",
+        "status",
         "created_at",
         "updated_at",
     ]
-    list_filter = ('user', 'status', 'items__product',
-                   'delivery__delivery_type', 'delivery__is_delivered',
-                   "payment__payment_status", "payment__payment_method",
-                   )
+    list_filter = (
+        "user",
+        "status",
+        "items__product",
+        "delivery__delivery_type",
+        "delivery__is_delivered",
+        "payment__payment_status",
+        "payment__payment_method",
+    )
 
     readonly_fields = Order.get_fields_list()
 
     inlines = (OrderItemInline, DeliveryInline, OrderPaymentInline)
-    ordering = ['-created_at']
+    ordering = ["-created_at"]
+
 
 @admin.register(OrderPayment)
 class OrderPaymentAdmin(admin.ModelAdmin):

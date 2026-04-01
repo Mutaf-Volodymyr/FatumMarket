@@ -2,7 +2,8 @@ from django.apps import AppConfig
 
 
 class DeliveryConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.delivery'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.delivery"
+
     def ready(self):
-        import interfaces.admin.delivery
+        import interfaces.admin.delivery  # noqa: F401

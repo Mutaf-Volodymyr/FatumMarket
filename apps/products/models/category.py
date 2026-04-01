@@ -1,51 +1,43 @@
 from django.contrib import admin
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from mptt.fields import TreeForeignKey
 from mptt.models import MPTTModel
-from apps.products.models.product import Product
-from base.for_model import PositionField, BaseModel, SlugMixin
-from django.utils.translation import gettext_lazy as _
 
+from apps.products.models.product import Product
+from base.for_model import BaseModel, PositionField, SlugMixin
 
 __all__ = [
     "Category",
 ]
+
 
 class Category(MPTTModel, BaseModel, SlugMixin):
 
     name = models.CharField(
         max_length=255,
         unique=True,
-        verbose_name=_('Название'),
+        verbose_name=_("Название"),
     )
     parent = TreeForeignKey(
-        'self',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='children'
+        "self", on_delete=models.CASCADE, null=True, blank=True, related_name="children"
     )
     position = PositionField()
     image = models.ImageField(
-        upload_to='categories',
-        null=True,
-        blank=True,
-        verbose_name=_('Изображение')
+        upload_to="categories", null=True, blank=True, verbose_name=_("Изображение")
     )
 
     @property
     def products(self):
-        return Product.objects.filter(
-            category__in=self.get_descendants(include_self=True)
-        )
+        return Product.objects.filter(category__in=self.get_descendants(include_self=True))
 
     @property
-    @admin.display(description=_('Количество продуктов'))
+    @admin.display(description=_("Количество продуктов"))
     def products_count(self):
         return self.products.count()
 
     class MPTTMeta:
-        order_insertion_by = ['position']
+        order_insertion_by = ["position"]
 
     class Meta:
         verbose_name = _("Категория")
@@ -59,8 +51,3 @@ class Category(MPTTModel, BaseModel, SlugMixin):
 
     def __str__(self):
         return self.name
-
-
-
-
-

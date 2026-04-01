@@ -1,7 +1,7 @@
-from typing import Optional, List
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
-from apps.users.domain.schema import UserSchema
 
 class OrderCreateSchema(BaseModel):
 
@@ -11,4 +11,3 @@ class OrderCreateSchema(BaseModel):
     # payment: PaymentSchema = Field(..., description="Оплата")
     comment: Optional[str] = Field(None, max_length=500, description="Комментарий к заказу")
     additional_data: Optional[dict] = Field(None, description="Дополнительные данные (JSON)")
-

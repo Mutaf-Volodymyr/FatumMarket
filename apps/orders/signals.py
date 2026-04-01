@@ -2,7 +2,7 @@ from typing import Any
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
 from apps.orders.models import Order, OrderItem
@@ -14,7 +14,9 @@ def track_order_status(sender: type, instance: Order, **kwargs: Any) -> None:
     if not instance.pk:
         instance._old_status = None
         return
-    instance._old_status = Order.objects.filter(pk=instance.pk).values_list("status", flat=True).first()
+    instance._old_status = (
+        Order.objects.filter(pk=instance.pk).values_list("status", flat=True).first()
+    )
 
 
 @receiver(post_save, sender=Order, dispatch_uid="post_save:create_order_logic")
@@ -39,13 +41,11 @@ def create_order_logic(
     items = []
     products = []
 
-    items_qs = instance.items.select_related('product')
+    items_qs = instance.items.select_related("product")
 
     with transaction.atomic():
         # Изоляция продуктов
-        Product.objects.filter(
-            id__in=[item.product_id for item in items_qs]
-        ).select_for_update()
+        Product.objects.filter(id__in=[item.product_id for item in items_qs]).select_for_update()
 
         for item in items_qs:
 
@@ -60,17 +60,14 @@ def create_order_logic(
             # Product
             if item.product.quantity < item.quantity:
                 raise ValidationError(
-                        "Недостаточное количество товара %s в наличии\n"
-                            "Доступно: %s", item.product.name, item.product.quantity
-                    )
+                    "Недостаточное количество товара %s в наличии\n" "Доступно: %s",
+                    item.product.name,
+                    item.product.quantity,
+                )
             item.product.quantity -= item.quantity
 
             products.append(item.product)
 
         # Обновление
-        OrderItem.objects.bulk_update(
-            items, fields=['price', 'discount', 'product_name', 'status']
-        )
-        Product.objects.bulk_update(
-            products, fields=['quantity']
-        )
+        OrderItem.objects.bulk_update(items, fields=["price", "discount", "product_name", "status"])
+        Product.objects.bulk_update(products, fields=["quantity"])

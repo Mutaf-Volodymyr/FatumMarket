@@ -5,16 +5,13 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Добро пожаловать!",
     "copyright": "Larez SRL.",
     "topmenu_links": [
-        {"name": "Главная",  "url": "/admin", "permissions": ["auth.view_user"]},
-        {"name": "Товары",  "url": "/admin/products/product/", "permissions": ["auth.view_user"]},
-
-
-
+        {"name": "Главная", "url": "/admin", "permissions": ["auth.view_user"]},
+        {"name": "Товары", "url": "/admin/products/product/", "permissions": ["auth.view_user"]},
     ],
     "show_sidebar": True,
     "hide_app_list": False,
     "navigation_expanded": True,
-    'changeform_format': "horizontal_tabs",
+    "changeform_format": "horizontal_tabs",
     # "changeform_format_overrides": {
     # }
 }
@@ -31,6 +28,5 @@ JAZZMIN_UI_TWEAKS = {
     "button_classes": {
         "primary": "btn-primary",
         "secondary": "btn-secondary",
-    }
-
+    },
 }

@@ -1,12 +1,15 @@
 from decimal import Decimal
-from typing import Optional, Iterable
+from typing import Iterable, Optional
 
 from django.db import transaction
 
 from apps.address.domain.address_manager import AddressManager
 from apps.address.domain.schema import CreateAddressSchema
 from apps.address.models import Address
-from apps.delivery.domain.delivery_creators import GeneralOrderDeliveryCreator, OrderDeliveryException
+from apps.delivery.domain.delivery_creators import (
+    GeneralOrderDeliveryCreator,
+    OrderDeliveryException,
+)
 from apps.delivery.models import Delivery
 from apps.orders.domain.payment_manager import OrderPaymentManager
 from apps.orders.domain.schema import OrderCreateSchema, PaymentSchema
@@ -77,13 +80,15 @@ class OrderCreator:
         email_value = _clean(data.get("email"))
         if email_value is not None:
             email_value = str(email_value)
-        return UserSchema.model_validate({
-            "id": data.get("id"),
-            "email": email_value,
-            "first_name": _clean(data.get("first_name")),
-            "last_name": _clean(data.get("last_name")),
-            "phone": phone_value,
-        })
+        return UserSchema.model_validate(
+            {
+                "id": data.get("id"),
+                "email": email_value,
+                "first_name": _clean(data.get("first_name")),
+                "last_name": _clean(data.get("last_name")),
+                "phone": phone_value,
+            }
+        )
 
     def _resolve_customer(self, data: dict) -> User:
         if not data.get("phone") and not data.get("email"):
@@ -116,9 +121,11 @@ class OrderCreator:
         if not raw_address:
             raise OrderCreatorException("Courier delivery requires address")
 
-        address_schema = CreateAddressSchema.model_validate({
-            "raw_address": raw_address,
-        })
+        address_schema = CreateAddressSchema.model_validate(
+            {
+                "raw_address": raw_address,
+            }
+        )
         address = AddressManager.get_or_create_address(address_schema)
         AddressManager(instance=address).associate_with_user(customer)
         return address
@@ -188,17 +195,6 @@ class OrderCreator:
         order.status = Order.OrderStatus.IN_WORK
         order.save()
         return order
-
-
-
-
-
-
-
-
-
-
-
 
     #
     # def _save_order_to_db(self):

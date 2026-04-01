@@ -1,1 +1,1 @@
-from .users import CustomUserAdmin
+from .users import CustomUserAdmin  # noqa: F401

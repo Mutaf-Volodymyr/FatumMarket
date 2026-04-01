@@ -8,19 +8,16 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from base.for_model import BaseModel
 
-__all__ = [
-    'User',
-    'UserStatuses'
-]
+__all__ = ["User", "UserStatuses"]
 
 
 class UserStatuses(models.TextChoices):
-    OWNER = 'owner', _('Владелец')
-    DEVELOPER = "developer", _('Разработчик')
+    OWNER = "owner", _("Владелец")
+    DEVELOPER = "developer", _("Разработчик")
     DELIVERY_MAN = "delivery_man", _("Доставщик")
     SALES_MAN = "sales_man", _("Продавец")
-    BOOKER = "booker", _('Бухгалтер')
-    MANAGER = 'manager', _("Менеджер")
+    BOOKER = "booker", _("Бухгалтер")
+    MANAGER = "manager", _("Менеджер")
 
 
 class UserManager(BaseUserManager):
@@ -32,11 +29,16 @@ class UserManager(BaseUserManager):
         if phone in ("", None):
             extra_fields["phone"] = None
 
-        username = username or extra_fields.get('username') or extra_fields.get('phone') or extra_fields.get('email')
+        username = (
+            username
+            or extra_fields.get("username")
+            or extra_fields.get("phone")
+            or extra_fields.get("email")
+        )
         if not username:
             raise ValueError(_("Username, phone number or email is required"))
 
-        extra_fields.setdefault('username', username)
+        extra_fields.setdefault("username", username)
         user = self.model(**extra_fields)
         user.set_password(password)
         user.full_clean()
@@ -72,13 +74,15 @@ class User(AbstractUser, BaseModel):
     )
 
     # персональная информация
-    first_name = models.CharField(_("Имя"), max_length=50, blank=True, default='')
-    last_name = models.CharField(_("Фамилия"), max_length=50, blank=True, default='')
+    first_name = models.CharField(_("Имя"), max_length=50, blank=True, default="")
+    last_name = models.CharField(_("Фамилия"), max_length=50, blank=True, default="")
     # контакты
     email = models.EmailField(blank=True, null=True, verbose_name=_("Email"), unique=True)
-    phone = PhoneNumberField(unique=True, verbose_name=_('Номер телефона'), blank=True, null=True)
+    phone = PhoneNumberField(unique=True, verbose_name=_("Номер телефона"), blank=True, null=True)
 
-    telegram_id = models.CharField(max_length=50, blank=True, verbose_name=_("Телеграм ID"), null=True)
+    telegram_id = models.CharField(
+        max_length=50, blank=True, verbose_name=_("Телеграм ID"), null=True
+    )
     addresses = models.ManyToManyField("address.Address", blank=True, verbose_name=_("Адреса"))
     # статусы
     staff_status = models.CharField(
@@ -86,10 +90,16 @@ class User(AbstractUser, BaseModel):
         choices=UserStatuses.choices,
         verbose_name=_("Статус"),
         null=True,
-        blank=True
+        blank=True,
     )
-    is_staff = models.BooleanField(_("Статус персонала"), default=False, )
-    is_active = models.BooleanField(_("Активный"), default=True, )
+    is_staff = models.BooleanField(
+        _("Статус персонала"),
+        default=False,
+    )
+    is_active = models.BooleanField(
+        _("Активный"),
+        default=True,
+    )
     is_baned = models.BooleanField(_("Забанен"), default=False)
 
     class Meta:

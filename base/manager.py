@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
+from logging import getLogger
 from typing import Optional
 
 from django.db.models import Model as DjangoModel
 from pydantic import BaseModel as PydanticSchema
-
-from logging import getLogger
 
 
 class BaseManager(ABC):
@@ -16,11 +15,11 @@ class BaseManager(ABC):
         cls._logger = getLogger(cls.__name__)
 
     def __init__(
-            self,
-            *,
-            instance_pk: Optional[int] = None,
-            instance: Optional[DjangoModel] = None,
-            data: Optional[dict] = None,
+        self,
+        *,
+        instance_pk: Optional[int] = None,
+        instance: Optional[DjangoModel] = None,
+        data: Optional[dict] = None,
     ):
         self._data = data
         self._instance_pk = instance_pk

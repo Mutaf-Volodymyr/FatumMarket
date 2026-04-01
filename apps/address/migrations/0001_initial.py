@@ -7,29 +7,33 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Address',
+            name="Address",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Создано')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Обновлено')),
-                ('raw_address', models.CharField(max_length=512)),
-                ('city', models.CharField(blank=True, max_length=128)),
-                ('street', models.CharField(blank=True, max_length=128)),
-                ('house', models.CharField(blank=True, max_length=32)),
-                ('latitude', models.DecimalField(decimal_places=6, max_digits=9, null=True)),
-                ('longitude', models.DecimalField(decimal_places=6, max_digits=9, null=True)),
-                ('is_validated', models.BooleanField(default=False)),
-                ('validation_error', models.CharField(blank=True, max_length=255)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="Создано")),
+                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="Обновлено")),
+                ("raw_address", models.CharField(max_length=512)),
+                ("city", models.CharField(blank=True, max_length=128)),
+                ("street", models.CharField(blank=True, max_length=128)),
+                ("house", models.CharField(blank=True, max_length=32)),
+                ("latitude", models.DecimalField(decimal_places=6, max_digits=9, null=True)),
+                ("longitude", models.DecimalField(decimal_places=6, max_digits=9, null=True)),
+                ("is_validated", models.BooleanField(default=False)),
+                ("validation_error", models.CharField(blank=True, max_length=255)),
             ],
             options={
-                'verbose_name': 'Адрес',
-                'verbose_name_plural': 'Адреса',
-                'db_table': 'address',
+                "verbose_name": "Адрес",
+                "verbose_name_plural": "Адреса",
+                "db_table": "address",
             },
         ),
     ]

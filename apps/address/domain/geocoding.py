@@ -1,6 +1,8 @@
-from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut
 import re
+
+from geopy.exc import GeocoderTimedOut
+from geopy.geocoders import Nominatim
+
 from config import settings
 
 geolocator = Nominatim(user_agent=settings.NOMINATIM_USER_AGENT)
@@ -13,8 +15,6 @@ MOLDOVA_BOUNDS = {
 }
 
 
-
-
 APARTMENT_REGEX = re.compile(
     r"(кв\.?|apt\.?|ap\.?|apartment|apartament|apart\.?)\s*\d+",
     re.IGNORECASE,
@@ -25,6 +25,7 @@ def normalize_address_for_geocoding(raw: str) -> str:
     cleaned = APARTMENT_REGEX.sub("", raw)
     cleaned = re.sub(r"\s{2,}", " ", cleaned)
     return cleaned.strip()
+
 
 def geocode_address(address: str):
     address = normalize_address_for_geocoding(address)

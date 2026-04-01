@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
 
 from apps.address.models import Address
-from apps.delivery.domain.schema import CreatePickupDeliverySchema, BaseCreateDeliverySchema, \
-    CreateCourierDeliverySchema
+from apps.delivery.domain.schema import (
+    BaseCreateDeliverySchema,
+    CreateCourierDeliverySchema,
+    CreatePickupDeliverySchema,
+)
 from apps.delivery.models import Delivery
 from apps.orders.models import Order
 from apps.users.models import User
@@ -30,7 +33,7 @@ class BaseDeliveryCreator(ABC):
 
 class PickupDeliveryCreator(BaseDeliveryCreator):
     _schema = CreatePickupDeliverySchema
-    _type = 'pickup'
+    _type = "pickup"
 
     def create(self):
         if self._delivery_instance is not None:
@@ -47,7 +50,7 @@ class PickupDeliveryCreator(BaseDeliveryCreator):
 
 class CourierDeliveryCreator(BaseDeliveryCreator):
     _schema = CreateCourierDeliverySchema
-    _type = 'courier'
+    _type = "courier"
 
     def create(self):
         if self._delivery_instance is not None:
@@ -66,7 +69,7 @@ class CourierDeliveryCreator(BaseDeliveryCreator):
 
 class NovaPostDeliveryCreator(BaseDeliveryCreator):
     _schema = CreateCourierDeliverySchema
-    _type = 'nova_posta'
+    _type = "nova_posta"
 
     def create(self):
         if self._delivery_instance is not None:
@@ -98,7 +101,7 @@ class GeneralOrderDeliveryCreator:
         for creator in self._creators:
             if creator._type == delivery_type:
                 return creator
-        raise OrderDeliveryException('%s is not a valid delivery type' % delivery_type)
+        raise OrderDeliveryException("%s is not a valid delivery type" % delivery_type)
 
     def create_order_delivery(self, data, address: Address = None):
         self.creator = self._creator_class(
@@ -110,4 +113,3 @@ class GeneralOrderDeliveryCreator:
         self.delivery = self.creator.create()
 
         return self.delivery
-

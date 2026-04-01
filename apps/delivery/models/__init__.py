@@ -1,1 +1,1 @@
-from .delivery import *
+from .delivery import *  # noqa: F403

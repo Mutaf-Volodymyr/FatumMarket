@@ -14,7 +14,6 @@ class CustomerManager(BaseManager):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-
     @property
     def instance(self):
         if self._instance is None:
@@ -30,17 +29,14 @@ class CustomerManager(BaseManager):
         instance = None
         try:
             if schema.email:
-                instance = cls._class_model.objects.get(
-                    email=schema.email
-                )
+                instance = cls._class_model.objects.get(email=schema.email)
             elif schema.phone:
-                instance = cls._class_model.objects.get(
-                    phone=schema.phone
-                )
+                instance = cls._class_model.objects.get(phone=schema.phone)
         except cls._class_model.DoesNotExist:
             cls._logger.debug(
                 "_get_instance_by_schema: User not found <phone: %s> <email: %s>",
-                schema.phone, schema.email
+                schema.phone,
+                schema.email,
             )
         return instance
 
@@ -51,35 +47,35 @@ class CustomerManager(BaseManager):
             **data,
             is_active=activate,
         )
-        cls._logger.info('User created: %s', instance)
+        cls._logger.info("User created: %s", instance)
         if activate:
-            cls._logger.info('User activated: %s', instance)
+            cls._logger.info("User activated: %s", instance)
 
         return instance
 
     @classmethod
     def activate_customer(cls, instance: User) -> User:
         instance.is_active = True
-        instance.save(update_fields=['is_active'])
+        instance.save(update_fields=["is_active"])
 
-        cls._logger.info('User activated: %s', instance)
+        cls._logger.info("User activated: %s", instance)
 
         return instance
 
     @classmethod
     def bun_customer(cls, instance: User) -> User:
         instance.is_baned = True
-        instance.save(update_fields=['is_baned'])
+        instance.save(update_fields=["is_baned"])
 
-        cls._logger.info('User was baned: %s', instance)
+        cls._logger.info("User was baned: %s", instance)
 
         return instance
 
     @classmethod
     def get_or_create_customer(
-            cls,
-            schema: _class_schema,
-            activate_if_create: bool = False,
+        cls,
+        schema: _class_schema,
+        activate_if_create: bool = False,
     ) -> User | None:
 
         instance = cls._get_instance_by_schema(schema)
@@ -99,4 +95,3 @@ class CustomerManager(BaseManager):
                 else:
                     data[key] = value
         return data
-

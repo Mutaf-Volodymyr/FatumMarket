@@ -10,41 +10,72 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('orders', '0001_initial'),
-        ('products', '0001_initial'),
-        ('sessions', '0001_initial'),
+        ("orders", "0001_initial"),
+        ("products", "0001_initial"),
+        ("sessions", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='order',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL, verbose_name='Клиент'),
+            model_name="order",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Клиент",
+            ),
         ),
         migrations.AddField(
-            model_name='orderitem',
-            name='order',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='items', to='orders.order', verbose_name='Заказ'),
+            model_name="orderitem",
+            name="order",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="items",
+                to="orders.order",
+                verbose_name="Заказ",
+            ),
         ),
         migrations.AddField(
-            model_name='orderitem',
-            name='product',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='order_items', to='products.product', verbose_name='Товар'),
+            model_name="orderitem",
+            name="product",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="order_items",
+                to="products.product",
+                verbose_name="Товар",
+            ),
         ),
         migrations.AddField(
-            model_name='orderitem',
-            name='session',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='sessions.session', verbose_name='Сессия'),
+            model_name="orderitem",
+            name="session",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="sessions.session",
+                verbose_name="Сессия",
+            ),
         ),
         migrations.AddField(
-            model_name='orderitem',
-            name='user',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL),
+            model_name="orderitem",
+            name="user",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='orderpayment',
-            name='order',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.PROTECT, related_name='payment', to='orders.order'),
+            model_name="orderpayment",
+            name="order",
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="payment",
+                to="orders.order",
+            ),
         ),
     ]

@@ -23,13 +23,13 @@ jobs:
         run: pip install black isort flake8
 
       - name: black
-        run: black --check .
+        run: black --check . --exclude migrations/
 
       - name: isort
-        run: isort --check-only .
+        run: isort --check-only . --skip-glob="*/migrations/*"
 
       - name: flake8
-        run: flake8 . --max-line-length=100 --exclude=.git,__pycache__,migrations,staticfiles
+        run: flake8 .
 
   deploy:
     name: Deploy

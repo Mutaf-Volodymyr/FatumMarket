@@ -3,8 +3,8 @@ from celery import shared_task
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={"max_retries": 3})
 def validate_and_geocode_address(self, address_id):
-    from apps.address.models import Address
     from apps.address.domain.geocoding import geocode_address
+    from apps.address.models import Address
 
     address = Address.objects.get(id=address_id)
 
@@ -28,4 +28,3 @@ def validate_and_geocode_address(self, address_id):
     address.validation_error = ""
 
     address.save()
-

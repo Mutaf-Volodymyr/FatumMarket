@@ -5,6 +5,7 @@ from apps.orders.models import Order, OrderPayment
 class OrderPaymentException(Exception):
     pass
 
+
 class OrderPaymentManager:
     def __init__(self, order: Order, payment_schema: PaymentSchema):
         self._order = order
@@ -14,9 +15,8 @@ class OrderPaymentManager:
     @property
     def payment(self):
         if self._payment is not None:
-           self.create_order_payment()
+            self.create_order_payment()
         return self._payment
-
 
     def save_payment(self):
         self.payment.save()

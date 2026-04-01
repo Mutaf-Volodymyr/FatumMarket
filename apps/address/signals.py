@@ -23,8 +23,5 @@ def validate_created_address(
         return
 
     from apps.address.tasks import validate_and_geocode_address
-    transaction.on_commit(
-        lambda : validate_and_geocode_address.delay(address_id=instance.id)
-    )
 
-
+    transaction.on_commit(lambda: validate_and_geocode_address.delay(address_id=instance.id))
