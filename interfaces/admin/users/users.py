@@ -34,6 +34,7 @@ class UserOrderItemInlines(CardInlines):
 class CustomUserAdmin(admin.ModelAdmin):
     list_display = (
         "id",
+        "username",
         "phone",
         "email",
         "first_name",

@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
@@ -37,6 +39,10 @@ class UserManager(BaseUserManager):
         )
         if not username:
             raise ValueError(_("Username, phone number or email is required"))
+        if re.fullmatch(r"^\+?\d{1,20}$", username):
+            extra_fields["phone"] = username
+        else:
+            extra_fields["email"] = username
 
         extra_fields.setdefault("username", username)
         user = self.model(**extra_fields)
