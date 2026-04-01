@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django_filters',
     'rangefilter',
     "phonenumber_field",
+    'simple_history',
     
     # apps
     "apps.users",
