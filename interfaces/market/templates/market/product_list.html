@@ -53,7 +53,6 @@
                     Найдено товаров: <strong>{{ total_products_count }}</strong>
                 </div>
                 <form method="get" class="sort-form">
-                    <label for="sort">Сортировать:</label>
                     <select name="sort" id="sort" onchange="this.form.submit()">
                         <option value="newest" {% if selected_sort == 'newest' or not selected_sort %}selected{% endif %}>Сначала новые</option>
                         <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>Сначала старые</option>
