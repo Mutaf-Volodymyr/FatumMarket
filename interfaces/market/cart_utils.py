@@ -9,6 +9,8 @@ def get_order_item_creator_kwark_by_request(request):
     if request.user.is_authenticated:
         return {'user_id': request.user.id}
     elif request.session:
+        if request.session.session_key is None:
+            request.session.save()
         return {'session_id': request.session.session_key}
 
 

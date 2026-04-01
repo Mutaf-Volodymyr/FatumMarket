@@ -64,10 +64,29 @@ class CourierDeliveryCreator(BaseDeliveryCreator):
         return self._delivery_instance
 
 
+class NovaPostDeliveryCreator(BaseDeliveryCreator):
+    _schema = CreateCourierDeliverySchema
+    _type = 'nova_posta'
+
+    def create(self):
+        if self._delivery_instance is not None:
+            raise OrderDeliveryException("Nova Posta Delivery already exists")
+
+        delivery = Delivery.objects.create(
+            order=self._order,
+            recipient=self._recipient,
+            address=self._address,
+            **self._delivery_schema.model_dump(exclude_unset=True),
+        )
+        self._delivery_instance = delivery
+        return self._delivery_instance
+
+
 class GeneralOrderDeliveryCreator:
     _creators = [
         PickupDeliveryCreator,
         CourierDeliveryCreator,
+        NovaPostDeliveryCreator,
     ]
 
     def __init__(self, order: Order, delivery_type: str, recipient: User):
@@ -81,12 +100,14 @@ class GeneralOrderDeliveryCreator:
                 return creator
         raise OrderDeliveryException('%s is not a valid delivery type' % delivery_type)
 
-    def create_order_delivery(self, data):
+    def create_order_delivery(self, data, address: Address = None):
         self.creator = self._creator_class(
             order=self._order,
             recipient=self._recipient,
             data=data,
+            address=address,
         )
         self.delivery = self.creator.create()
 
         return self.delivery
+

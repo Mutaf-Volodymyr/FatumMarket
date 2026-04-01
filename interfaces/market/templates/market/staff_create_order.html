@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Создать заказ - FatumMarket{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">Создать заказ</h1>
+    </div>
+
+    <form method="post" class="staff-order-form">
+        {% csrf_token %}
+
+        <div class="staff-order-section">
+            <h2 class="staff-order-title">Заказчик</h2>
+            <div class="form-group">
+                <label for="customerFirstName">Имя</label>
+                <input type="text" id="customerFirstName" name="customer_first_name" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="customerLastName">Фамилия</label>
+                <input type="text" id="customerLastName" name="customer_last_name" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="customerPhone">Телефон</label>
+                <input type="text" id="customerPhone" name="customer_phone" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="staff-order-section">
+            {% include 'components/delivery_block.html' with id_prefix='staff_' courier_form_id='staffCourierDeliveryForm' show_delivery_date=False %}
+        </div>
+
+        <div class="staff-order-section">
+            {% include 'components/payment_block.html' with id_prefix='staff_' %}
+        </div>
+
+        <div class="staff-order-section">
+            <h2 class="staff-order-title">Товары</h2>
+
+            <!-- Фильтры -->
+            <div class="staff-product-filters">
+                <input type="text" id="staffProductSearch" class="form-control" placeholder="Поиск по названию...">
+                <select id="staffProductCategory" class="form-control">
+                    <option value="">Все категории</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+                <select id="staffProductBrand" class="form-control">
+                    <option value="">Все бренды</option>
+                    {% for brand in brands %}
+                        <option value="{{ brand.id }}">{{ brand.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Список товаров -->
+            <div class="staff-product-list" id="staffProductList">
+                {% for product in products %}
+                    <div class="staff-product-row"
+                         data-id="{{ product.id }}"
+                         data-name="{{ product.name }}"
+                         data-price="{{ product.price }}"
+                         data-stock="{{ product.quantity }}"
+                         data-category="{{ product.category_id }}"
+                         data-brand="{{ product.brand_id|default:'' }}">
+                        <span class="staff-product-row-name">{{ product.name }}</span>
+                        <span class="staff-product-row-meta">{{ product.price }} ₴ · В наличии: {{ product.quantity }}</span>
+                        <button type="button" class="btn btn-secondary btn-sm staff-product-add-btn">+ Добавить</button>
+                    </div>
+                {% empty %}
+                    <p class="staff-no-products">Нет активных товаров</p>
+                {% endfor %}
+            </div>
+
+            <!-- Выбранные товары -->
+            <div class="staff-selected-products" id="staffSelectedProducts" hidden>
+                <h3 class="staff-selected-title">Выбранные товары (<span id="staffSelectedCount">0</span>)</h3>
+                <div id="staffSelectedList"></div>
+            </div>
+
+            <!-- Скрытые инпуты для формы (заполняются JS) -->
+            <div id="staffProductInputs"></div>
+        </div>
+
+        <div class="staff-order-section">
+            <h2 class="staff-order-title">Комментарий к заказу</h2>
+            <textarea name="order_comment" rows="3" class="form-control"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-large btn-block">Создать заказ</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const searchInput = document.getElementById('staffProductSearch');
+    const categorySelect = document.getElementById('staffProductCategory');
+    const brandSelect = document.getElementById('staffProductBrand');
+    const productList = document.getElementById('staffProductList');
+    const selectedProducts = document.getElementById('staffSelectedProducts');
+    const selectedList = document.getElementById('staffSelectedList');
+    const selectedCount = document.getElementById('staffSelectedCount');
+    const inputsContainer = document.getElementById('staffProductInputs');
+
+    const selected = {};  // { productId: { name, price, quantity } }
+
+    function filterProducts() {
+        const q = searchInput.value.toLowerCase();
+        const catId = categorySelect.value;
+        const brandId = brandSelect.value;
+
+        productList.querySelectorAll('.staff-product-row').forEach(row => {
+            const matchName = row.dataset.name.toLowerCase().includes(q);
+            const matchCat = !catId || row.dataset.category === catId;
+            const matchBrand = !brandId || row.dataset.brand === brandId;
+            row.style.display = (matchName && matchCat && matchBrand) ? '' : 'none';
+        });
+    }
+
+    function renderSelected() {
+        selectedList.innerHTML = '';
+        inputsContainer.innerHTML = '';
+        const ids = Object.keys(selected);
+
+        ids.forEach(id => {
+            const item = selected[id];
+
+            const row = document.createElement('div');
+            row.className = 'staff-selected-row';
+            row.innerHTML = `
+                <span class="staff-selected-name">${item.name}</span>
+                <span class="staff-selected-price">${item.price} ₴</span>
+                <input type="number" min="1" value="${item.quantity}" class="staff-selected-qty" data-id="${id}">
+                <button type="button" class="btn btn-danger btn-sm staff-selected-remove" data-id="${id}">✕</button>
+            `;
+            selectedList.appendChild(row);
+
+            const pidInput = document.createElement('input');
+            pidInput.type = 'hidden';
+            pidInput.name = 'product_id';
+            pidInput.value = id;
+            inputsContainer.appendChild(pidInput);
+
+            const qtyInput = document.createElement('input');
+            qtyInput.type = 'hidden';
+            qtyInput.name = `quantity_${id}`;
+            qtyInput.value = item.quantity;
+            qtyInput.id = `hiddenQty_${id}`;
+            inputsContainer.appendChild(qtyInput);
+        });
+
+        selectedCount.textContent = ids.length;
+        selectedProducts.hidden = ids.length === 0;
+    }
+
+    function addProduct(id, name, price) {
+        if (selected[id]) {
+            selected[id].quantity += 1;
+        } else {
+            selected[id] = { name, price, quantity: 1 };
+        }
+        renderSelected();
+    }
+
+    productList.addEventListener('click', e => {
+        const btn = e.target.closest('.staff-product-add-btn');
+        if (!btn) return;
+        const row = btn.closest('.staff-product-row');
+        addProduct(row.dataset.id, row.dataset.name, row.dataset.price);
+    });
+
+    selectedList.addEventListener('click', e => {
+        const btn = e.target.closest('.staff-selected-remove');
+        if (!btn) return;
+        delete selected[btn.dataset.id];
+        renderSelected();
+    });
+
+    selectedList.addEventListener('change', e => {
+        const input = e.target.closest('.staff-selected-qty');
+        if (!input) return;
+        const val = parseInt(input.value, 10);
+        if (val > 0) {
+            selected[input.dataset.id].quantity = val;
+            const hidden = document.getElementById(`hiddenQty_${input.dataset.id}`);
+            if (hidden) hidden.value = val;
+        }
+    });
+
+    searchInput.addEventListener('input', filterProducts);
+    categorySelect.addEventListener('change', filterProducts);
+    brandSelect.addEventListener('change', filterProducts);
+})();
+</script>
+{% endblock %}

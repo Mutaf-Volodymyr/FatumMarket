@@ -12,6 +12,10 @@ from .orders import (
     checkout_view,
     order_detail_view,
     account_view,
+    order_success_view,
+)
+from .staff import (
+    staff_create_order_view,
 )
 from .categories import (
     category_list_view,
@@ -32,5 +36,7 @@ __all__ = [
     'account_view',
     'category_list_view',
     'brand_list_view',
+    'order_success_view',
+    'staff_create_order_view',
 ]
 

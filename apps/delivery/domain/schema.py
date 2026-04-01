@@ -38,6 +38,13 @@ class BaseCreateDeliverySchema(BaseDeliverySchema):
     recipient_id: Optional[int] = Field(..., description='ID клиента')
 
 
+class CreateNovaPostaDeliverySchema(BaseCreateDeliverySchema):
+    delivery_type: str = 'nova_posta'
+    post_office: Optional[int] = Field(
+        None,
+        description="Номер почтового отделения | почтомата"
+    )
+
 class CreateCourierDeliverySchema(BaseCreateDeliverySchema):
     delivery_type: str = 'courier'
     delivery_cost: Decimal = Field(

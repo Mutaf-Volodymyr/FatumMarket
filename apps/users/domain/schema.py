@@ -3,8 +3,8 @@ from pydantic import BaseModel, Field
 
 
 class UserSchema(BaseModel):
-    id: Optional[int]= Field(..., description="ID пользователя (клиента)")
-    email: Optional[str]= Field(..., description="Email пользователя (клиента)")
-    first_name: Optional[str]= Field(..., description="Имя пользователя (клиента)")
-    last_name: Optional[str]= Field(..., description="Фамилия пользователя (клиента)")
-    phone: Optional[str]= Field(..., description="Телефон пользователя (клиента)")
+    id: Optional[int] = Field(None, description="ID пользователя (клиента)")
+    email: Optional[str] = Field(None, description="Email пользователя (клиента)")
+    first_name: Optional[str] = Field(None, description="Имя пользователя (клиента)")
+    last_name: Optional[str] = Field(None, description="Фамилия пользователя (клиента)")
+    phone: Optional[str] = Field(None, description="Телефон пользователя (клиента)")

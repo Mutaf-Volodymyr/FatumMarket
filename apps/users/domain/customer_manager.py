@@ -46,8 +46,9 @@ class CustomerManager(BaseManager):
 
     @classmethod
     def create_new_customer(cls, schema: _class_schema, activate: bool = False) -> User | None:
+        data = cls._clean_schema_data(schema)
         instance = cls._class_model.objects.create_user(
-            **schema.model_dump(exclude_unset=True),
+            **data,
             is_active=activate,
         )
         cls._logger.info('User created: %s', instance)
@@ -86,4 +87,16 @@ class CustomerManager(BaseManager):
             instance = cls.create_new_customer(schema, activate_if_create)
 
         return instance
+
+    @classmethod
+    def _clean_schema_data(cls, schema: _class_schema) -> dict:
+        data = schema.model_dump(exclude_unset=True, exclude_none=True)
+        for key, value in list(data.items()):
+            if isinstance(value, str):
+                value = value.strip()
+                if not value:
+                    data.pop(key, None)
+                else:
+                    data[key] = value
+        return data
 

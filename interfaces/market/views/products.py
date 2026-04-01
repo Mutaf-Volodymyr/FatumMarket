@@ -1,12 +1,10 @@
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q, Exists, OuterRef, Value, BooleanField
-from django.http import QueryDict
+from django.db.models import Q
 from decimal import Decimal
 from collections import defaultdict
 from apps.products.models import Product, Category, Brand, SpecificationValue
 from apps.products.domain.product_filters import ProductFiltersBuilder
-from apps.orders.models import OrderItem
 from interfaces.market.cart_utils import annotate_product_in_carts_by_request
 
 

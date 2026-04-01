@@ -25,6 +25,13 @@ class UserStatuses(models.TextChoices):
 
 class UserManager(BaseUserManager):
     def create_user(self, username=None, password=None, **extra_fields):
+        email = extra_fields.get("email")
+        phone = extra_fields.get("phone")
+        if email in ("", None):
+            extra_fields.pop("email")
+        if phone in ("", None):
+            extra_fields["phone"] = None
+
         username = username or extra_fields.get('username') or extra_fields.get('phone') or extra_fields.get('email')
         if not username:
             raise ValueError(_("Username, phone number or email is required"))
@@ -32,7 +39,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('username', username)
         user = self.model(**extra_fields)
         user.set_password(password)
-        user.clean()
+        user.full_clean()
         user.save(using=self._db)
         return user
 
@@ -54,12 +61,14 @@ class UserManager(BaseUserManager):
 class User(AbstractUser, BaseModel):
     username_validator = UnicodeUsernameValidator()
     username = models.CharField(
-        _("Аутентификатор пользователя"),
+        _("Идетификатор пользователя"),
         max_length=150,
         unique=True,
+        blank=True,
+        null=True,
         validators=[username_validator],
         help_text=_("Используется для входа (email или телефон)"),
-        error_messages={"unique": _("Пользователь с таким email или phone уже существует.")},
+        error_messages={"unique": _("Пользователь с таким иднтификатором уже существует.")},
     )
 
     # персональная информация

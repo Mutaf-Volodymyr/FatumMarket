@@ -1,0 +1,17 @@
+<div class="cart-section">
+    <h2 class="cart-section-title">Оплата</h2>
+    <div class="payment-options">
+        <div class="payment-option">
+            <input type="radio" name="payment_method" id="{{ id_prefix }}payment_cash" value="cash" checked class="payment-radio">
+            <label for="{{ id_prefix }}payment_cash" class="payment-label">
+                <span class="payment-name">Наличная</span>
+            </label>
+        </div>
+        <div class="payment-option">
+            <input type="radio" name="payment_method" id="{{ id_prefix }}payment_card" value="paid" class="payment-radio">
+            <label for="{{ id_prefix }}payment_card" class="payment-label">
+                <span class="payment-name">Безналичная</span>
+            </label>
+        </div>
+    </div>
+</div>

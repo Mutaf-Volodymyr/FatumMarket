@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Заказ оформлен - FatumMarket{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">Спасибо за заказ!</h1>
+    </div>
+
+    <div class="order-success">
+        <div class="order-success-card">
+            <div class="order-success-icon" aria-hidden="true">✓</div>
+            <h2>Заказ #{{ order.id }} оформлен</h2>
+            <p>Мы свяжемся с вами для подтверждения и доставки.</p>
+            <div class="order-success-actions">
+                <a href="{% url 'market:order_detail' order.id %}" class="btn btn-primary">Перейти к заказу</a>
+                <a href="{% url 'market:home' %}" class="btn btn-secondary">Продолжить покупки</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

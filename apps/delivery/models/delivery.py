@@ -35,6 +35,7 @@ class Delivery(BaseModel):
     # куда
     delivery_type = models.CharField(max_length=100, choices=DeliveryTypeChoices.choices, default=DeliveryTypeChoices.pickup, verbose_name=_('Способ доставки'),)
     address = models.ForeignKey('address.Address', on_delete=models.PROTECT, verbose_name=_('Адрес'), null=True, blank=True)
+    post_office = models.PositiveIntegerField(verbose_name=_("Номер почтового отделения | почтомата"), null=True, blank=True)
     comment = models.TextField(null=True, blank=True, verbose_name=_('Комментарий'))
 
     # how money
@@ -64,10 +65,10 @@ class Delivery(BaseModel):
     def _get_old_model(self):
         return Delivery.objects.get(pk=self.order.pk)
 
-    def _set_delivered_at(self, old_model, update_fields):
+    def _set_delivered_at(self, old_model: "Delivery", update_fields: list[str]):
         if self.is_delivered and not old_model.is_delivered:
             self.delivered_at = datetime.now()
-        return ['is_delivered', 'delivered_at']
+        return ['is_delivered', 'delivered_at'] + update_fields
 
     def save(self, *args, **kwargs):
         if self.pk:

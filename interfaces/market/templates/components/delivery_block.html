@@ -1,0 +1,75 @@
+<div class="cart-section">
+    <h2 class="cart-section-title">Доставка</h2>
+    <div class="delivery-options">
+        <div class="delivery-option">
+            <input type="radio" name="delivery_type" id="{{ id_prefix }}delivery_pickup" value="pickup" checked class="delivery-radio">
+            <label for="{{ id_prefix }}delivery_pickup" class="delivery-label">
+                <span class="delivery-name">Самовывоз</span>
+            </label>
+        </div>
+        <div class="delivery-option">
+            <input type="radio" name="delivery_type" id="{{ id_prefix }}delivery_courier" value="courier" class="delivery-radio">
+            <label for="{{ id_prefix }}delivery_courier" class="delivery-label">
+                <span class="delivery-name">Курьер</span>
+            </label>
+        </div>
+        <div class="delivery-option">
+            <input type="radio" name="delivery_type" id="{{ id_prefix }}delivery_nova_posta" value="nova_posta" class="delivery-radio">
+            <label for="{{ id_prefix }}delivery_nova_posta" class="delivery-label">
+                <span class="delivery-name">Nova Posta</span>
+            </label>
+        </div>
+    </div>
+    <div class="delivery-form courier-delivery-form" id="{{ courier_form_id }}" hidden>
+        <div class="form-group">
+            <label for="{{ id_prefix }}courierAddress">Адрес доставки</label>
+            <input type="text" id="{{ id_prefix }}courierAddress" name="delivery_address" class="form-control" autocomplete="off" data-courier-required>
+        </div>
+        {% if show_delivery_date %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ id_prefix }}deliveryDateDisplay">Желаемая дата доставки</label>
+                    <div class="date-input-wrapper">
+                        <input type="text" id="{{ id_prefix }}deliveryDateDisplay" class="form-control date-input" placeholder="Выберите дату" readonly>
+                        <input type="date" id="{{ id_prefix }}deliveryDate" name="delivery_date" class="date-input-hidden" tabindex="-1">
+                        <button type="button" class="date-input-trigger" id="{{ id_prefix }}deliveryDateTrigger" aria-label="Открыть календарь">
+                            <span class="date-input-icon" aria-hidden="true">📅</span>
+                        </button>
+                    </div>
+                    <div class="date-picker" id="{{ id_prefix }}deliveryDatePicker" hidden>
+                        <div class="date-picker-header">
+                            <button type="button" class="date-picker-nav" id="{{ id_prefix }}deliveryDatePrev" aria-label="Предыдущий месяц">‹</button>
+                            <div class="date-picker-title" id="{{ id_prefix }}deliveryDateTitle"></div>
+                            <button type="button" class="date-picker-nav" id="{{ id_prefix }}deliveryDateNext" aria-label="Следующий месяц">›</button>
+                        </div>
+                        <div class="date-picker-weekdays">
+                            <span>Пн</span>
+                            <span>Вт</span>
+                            <span>Ср</span>
+                            <span>Чт</span>
+                            <span>Пт</span>
+                            <span>Сб</span>
+                            <span>Вс</span>
+                        </div>
+                        <div class="date-picker-days" id="{{ id_prefix }}deliveryDateDays"></div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        <div class="form-group">
+            <label for="{{ id_prefix }}deliveryComment">Комментарий к доставке</label>
+            <textarea id="{{ id_prefix }}deliveryComment" name="delivery_comment" rows="3" class="form-control"></textarea>
+        </div>
+    </div>
+
+    <div class="delivery-form nova-posta-delivery-form" id="{{ nova_posta_form_id }}" hidden>
+        <div class="form-group">
+            <label for="{{ id_prefix }}postOffice">Номер отделения</label>
+            <input type="number" id="{{ id_prefix }}postOffice" name="post_office_number" class="form-control" autocomplete="off" data-courier-required>
+        </div>
+        <div class="form-group">
+            <label for="{{ id_prefix }}deliveryComment">Комментарий к доставке</label>
+            <textarea id="{{ id_prefix }}deliveryComment" name="delivery_comment" rows="3" class="form-control"></textarea>
+        </div>
+    </div>
+</div>

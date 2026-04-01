@@ -76,8 +76,6 @@
             '.cart-total-price',
             '.cart-total-discount',
             '.cart-final-price',
-            '.cart-delivery-price',
-            '.delivery-price',
             '.summary-item span:last-child',
             '.summary-total span:last-child'
         ];

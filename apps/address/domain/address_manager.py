@@ -36,10 +36,8 @@ class AddressManager(BaseManager):
 
     @classmethod
     def get_or_create_address(cls, schema: CreateAddressSchema) -> Address:
-
-        instance = cls._class_model.objects.filter(
-            **schema.model_dump(exclude_unset=True)
-        ).first()
+        data = cls._clean_schema_data(schema)
+        instance = cls._class_model.objects.filter(**data).first()
 
         if instance is None:
             instance = cls.create_new_address(schema)
@@ -48,9 +46,8 @@ class AddressManager(BaseManager):
 
     @classmethod
     def create_new_address(cls, schema: CreateAddressSchema) -> Address:
-        instance = cls._class_model.objects.create(
-            **schema.model_dump(exclude_unset=True),
-        )
+        data = cls._clean_schema_data(schema)
+        instance = cls._class_model.objects.create(**data)
         cls._logger.info('Address created: %s', instance)
         return instance
 
@@ -73,3 +70,15 @@ class AddressManager(BaseManager):
             )
             return
         self._logger.info('Address not found')
+
+    @classmethod
+    def _clean_schema_data(cls, schema: CreateAddressSchema) -> dict:
+        data = schema.model_dump(exclude_unset=True, exclude_none=True)
+        for key, value in list(data.items()):
+            if isinstance(value, str):
+                value = value.strip()
+                if not value:
+                    data.pop(key, None)
+                else:
+                    data[key] = value
+        return data

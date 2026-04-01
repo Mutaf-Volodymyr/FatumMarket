@@ -22,6 +22,11 @@
                         <a href="{% url 'market:account' %}" class="navbar-link">
                             <span class="link-text">Кабинет</span>
                         </a>
+                        {% if user.staff_status in 'manager sales_man owner developer' %}
+                            <a href="{% url 'market:staff_create_order' %}" class="navbar-link">
+                                <span class="link-text">STAFF</span>
+                            </a>
+                        {% endif %}
                     {% endif %}
                 </div>
                 <div class="navbar-menu-auth">

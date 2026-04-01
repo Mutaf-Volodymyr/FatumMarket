@@ -132,7 +132,7 @@ def cart_update_view(request, item_id):
             error_message = None
             removed = new_quantity == 0
 
-        except OrderItemCartManager as e:
+        except OrderItemException as e:
             error_message = str(e)
             success = False
             removed = False

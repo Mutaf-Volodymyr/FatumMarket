@@ -37,13 +37,16 @@ class DeliveryInline(admin.StackedInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("__str__", 'status', 'total_price')
+    list_display = ("id", 'user' , 'status', 'total_price', 'created_at')
     fields = [
+        "id",
         'user',
         'total_price',
         'total_discount',
         'comment',
-        'status'
+        'status',
+        "created_at",
+        "updated_at",
     ]
     list_filter = ('user', 'status', 'items__product',
                    'delivery__delivery_type', 'delivery__is_delivered',
@@ -53,6 +56,7 @@ class OrderAdmin(admin.ModelAdmin):
     readonly_fields = Order.get_fields_list()
 
     inlines = (OrderItemInline, DeliveryInline, OrderPaymentInline)
+    ordering = ['-created_at']
 
 @admin.register(OrderPayment)
 class OrderPaymentAdmin(admin.ModelAdmin):
