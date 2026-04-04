@@ -17,11 +17,16 @@ class ProductOrdersInline(admin.TabularInline):
     extra = 0
     verbose_name_plural = _("Заказы")
     verbose_name = _("Заказ")
+    fields = ["order", "price", "quantity", "created_at", "updated_at"]
     readonly_fields = ["order", "price", "quantity", "created_at", "updated_at"]
     can_delete = False
 
     def has_add_permission(self, request, obj=None):
         return False
+
+    def get_queryset(self, request):
+        queryset = super(ProductOrdersInline, self).get_queryset(request)
+        return queryset.filter(status=OrderItem.OrderItemStatus.ORDER)
 
 
 class ProductImageInline(admin.TabularInline):
