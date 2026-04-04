@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Корзина - FatumMarket{% endblock %}
+{% block title %}Корзина - Fatum.Fit{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -51,7 +51,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="recipientPhone">Телефон получателя</label>
-                                    <input type="text" id="recipientPhone" name="recipient_phone" class="form-control" data-recipient-required>
+                                    <input type="text" id="recipientPhone" name="recipient_phone" class="form-control" placeholder="+37369123456" data-recipient-required>
                                 </div>
                             </div>
                         {% else %}
@@ -62,7 +62,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="customerPhone">Телефон</label>
-                                    <input type="text" id="customerPhone" name="customer_phone" class="form-control" required>
+                                    <input type="text" id="customerPhone" name="customer_phone" class="form-control" placeholder="+380XXXXXXXXX" required>
                                 </div>
                             </div>
                         {% endif %}

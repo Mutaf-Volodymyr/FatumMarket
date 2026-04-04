@@ -69,8 +69,9 @@ document.addEventListener('DOMContentLoaded', function() {
             discountSection.style.display = 'none';
         }
 
-        if (typeof updateDeliveryInfo === 'function') {
-            updateDeliveryInfo();
+        const finalPriceEl = document.querySelector('#finalPrice');
+        if (finalPriceEl && data.final_price !== undefined) {
+            finalPriceEl.textContent = `${window.formatPrice(parseFloat(data.final_price))} ₴`;
         }
     }
 
@@ -609,6 +610,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
+                if (!data) return;
                 if (data.success) {
                     if (data.removed) {
                         // Item was removed, reload page
@@ -620,30 +622,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             const cartItem = element.closest('.cart-item');
                             return cartItem && cartItem.offsetParent !== null;
                         }) || itemPriceCandidates[0];
-                        if (itemPriceEl) {
-                            const price = parseFloat(itemPriceEl.dataset.price || 0);
-                            const quantity = parseInt(quantityInput.value);
+                        const quantity = parseInt(quantityInput.value);
+                        // Update all variants (desktop + mobile) of this item
+                        itemPriceCandidates.forEach(el => {
+                            const price = parseFloat(el.dataset.price || 0);
                             const itemTotal = price * quantity;
-                            const formattedTotal = window.formatPrice(itemTotal);
-                            itemPriceEl.textContent = `${formattedTotal} ₴`;
-                            itemPriceEl.dataset.quantity = quantity;
-                        }
-                        
-                        // Update cart summary
-                        const totalPriceEl = document.querySelector('.cart-total-price');
-                        const totalDiscountEl = document.querySelector('.cart-total-discount');
-                        const finalPriceEl = document.querySelector('#finalPrice');
-                        
-                        if (totalPriceEl) {
-                            totalPriceEl.textContent = `${parseFloat(data.total_price).toFixed(2)} ₴`;
-                        }
-                        if (totalDiscountEl && parseFloat(data.total_discount) > 0) {
-                            totalDiscountEl.textContent = `-${parseFloat(data.total_discount).toFixed(2)} ₴`;
-                        }
-                        if (finalPriceEl) {
-                            // Recalculate with delivery price - will be updated by updateDeliveryInfo
-                            updateDeliveryInfo();
-                        }
+                            el.textContent = `${window.formatPrice(itemTotal)} ₴`;
+                            el.dataset.quantity = quantity;
+                        });
+
+                        // Recalculate totals based on checked items with updated quantities
+                        recalculateCartTotals();
                         
                         // Update cart count in navbar
                         const cartBadge = document.querySelector('.navbar-link-cart .cart-badge');
@@ -900,14 +889,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const priceEl = cartItem.querySelector('.cart-item-price .price-current');
                 if (priceEl) {
                     const price = parseFloat(priceEl.dataset.price || 0);
+                    const oldPrice = parseFloat(priceEl.dataset.oldPrice || priceEl.dataset.price || 0);
                     const quantity = parseInt(priceEl.dataset.quantity || 1);
-                    const discount = parseFloat(priceEl.dataset.discount || 0);
-                    
-                    const itemTotal = price * quantity;
-                    totalPrice += itemTotal;
-                    
-                    const itemDiscountTotal = discount * quantity;
-                    totalDiscount += itemDiscountTotal;
+
+                    totalPrice += oldPrice * quantity;
+                    if (oldPrice > price) {
+                        totalDiscount += (oldPrice - price) * quantity;
+                    }
                 }
             });
             
@@ -933,14 +921,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Ensure final price is not negative
+            // Update final price (items only, delivery cost added by delivery.js)
             const finalPriceElCheck = document.querySelector('#finalPrice');
             if (finalPriceElCheck) {
-                const finalText = finalPriceElCheck.textContent.replace(/\s/g, '').replace(/[^\d,.-]/g, '').replace(',', '.');
-                const finalValue = parseFloat(finalText) || 0;
-                if (finalValue < 0) {
-                    finalPriceElCheck.textContent = `${window.formatPrice(0)} ₴`;
-                }
+                const finalValue = Math.max(0, totalPrice - totalDiscount);
+                window.cartItemsFinalPrice = finalValue;
+                const deliveryCost = window.cartDeliveryCost || 0;
+                finalPriceElCheck.textContent = `${window.formatPrice(finalValue + deliveryCost)} ₴`;
             }
         }
         

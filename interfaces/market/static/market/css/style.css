@@ -2174,6 +2174,108 @@ body {
     color: var(--color-accent);
 }
 
+.delivery-price-badge {
+    font-weight: 600;
+    color: var(--color-accent);
+    font-size: 0.9rem;
+}
+
+.location-scroll-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-xs);
+    background: white;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+}
+
+.location-scroll-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.location-scroll-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.location-scroll-list::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+}
+
+.form-label-sm {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: var(--spacing-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.pickup-place-option,
+.courier-city-option {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.pickup-place-option:hover,
+.courier-city-option:hover {
+    background-color: rgba(220, 20, 60, 0.04);
+}
+
+.pickup-place-radio,
+.courier-city-radio {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+    position: relative;
+}
+
+.pickup-place-radio:checked,
+.courier-city-radio:checked {
+    border-color: var(--color-accent);
+    background-color: var(--color-accent);
+    box-shadow: inset 0 0 0 3px white;
+}
+
+.pickup-place-option label,
+.courier-city-option label {
+    cursor: pointer;
+    margin: 0;
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.pickup-place-radio:checked + label,
+.courier-city-radio:checked + label {
+    color: var(--color-accent);
+    font-weight: 500;
+}
+
+.delivery-note {
+    color: #666;
+    font-size: 0.9rem;
+    margin: var(--spacing-sm) 0;
+}
+
+.delivery-note-info {
+    color: var(--color-accent);
+    font-weight: 500;
+}
+
 /* Payment Options */
 .payment-options {
     display: flex;
@@ -2587,6 +2689,62 @@ body {
     border: 1px solid var(--color-border);
     border-radius: 6px;
     font-size: 0.95rem;
+}
+
+.staff-summary-section {
+    background: #fff;
+}
+
+.staff-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.staff-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.staff-summary-row:last-child {
+    border-bottom: none;
+}
+
+.staff-summary-label {
+    color: var(--color-text-light);
+    font-size: 0.95rem;
+}
+
+.staff-summary-value {
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.staff-summary-discount-row .staff-summary-label,
+.staff-summary-discount {
+    color: #2e7d32;
+}
+
+.staff-summary-total-row {
+    background: #fafafa;
+}
+
+.staff-summary-total-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.staff-summary-total {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-accent);
 }
 
 @media (max-width: 600px) {
@@ -3368,6 +3526,28 @@ body {
     .page-title {
         font-size: 1.5rem;
     }
+}
+
+.pickup-delivery-form {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid #e6e6e6;
+    border-radius: 12px;
+    background: #fafafa;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-6px);
+    overflow: hidden;
+    pointer-events: none;
+    transition: max-height 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+}
+
+.pickup-delivery-form.is-visible {
+    max-height: 400px;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    overflow: visible;
 }
 
 .courier-delivery-form {

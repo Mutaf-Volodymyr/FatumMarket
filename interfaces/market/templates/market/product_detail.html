@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ product.name }} - FatumMarket{% endblock %}
+{% block title %}{{ product.name }} - Fatum.Fit{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -52,10 +52,6 @@
         
         <div class="product-detail-info">
             <h1 class="product-detail-title">{{ product.name }}</h1>
-            
-            {% if product.brand %}
-                <p class="product-detail-brand">{{ product.brand.name }}</p>
-            {% endif %}
             
             <div class="product-detail-price">
                 <span class="price-current">{{ product.price }} ₴</span>

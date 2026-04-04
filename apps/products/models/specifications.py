@@ -11,14 +11,14 @@ __all__ = [
 
 class SpecificationName(BaseModel):
     name = models.CharField(max_length=255, verbose_name=_("Название"))
-    position = models.IntegerField(default=100, verbose_name=_("Position"))
+    position = models.IntegerField(default=100, verbose_name=_("Позиция"))
     unit_measurement = models.CharField(
         max_length=255,
         null=True,
         blank=True,
         verbose_name=_("Единица измерения"),
     )
-    filter_hide = models.BooleanField(default=False)
+    filter_hide = models.BooleanField(default=False, verbose_name="Не показывать в фильтрах")
 
     class Meta:
         db_table = "specification_name"

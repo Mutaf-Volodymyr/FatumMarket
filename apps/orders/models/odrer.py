@@ -98,7 +98,7 @@ class OrderItem(BaseModel):
         verbose_name=_("Количество"),
     )
     price = PriceField(verbose_name=_("Цена продажи"), null=True, blank=True)
-    discount = PriceField(verbose_name=_("Скидка"), default=0)
+    discount = PriceField(verbose_name=_("Скидка"), default=0, null=True, blank=True)
     product_name = models.CharField(
         max_length=256, verbose_name="Название товара", null=True, blank=True
     )
@@ -120,12 +120,12 @@ class OrderPayment(BaseModel):
     )
 
     class PaymentStatusChoices(models.TextChoices):
-        IN_PROGRESS = "IN_PROGRESS", _("В процессе")
+        IN_PROGRESS = "in_progress", _("В процессе")
         PAID = "paid", _("Оплачен")
         CANCELLED = "cancelled", _("Отменен")
-        FAIL = "FAIL", _("Провален")
-        REFUND = "REFUND", _("Отменен")
-        PARTIAL_REFUND = "PARTIAL_REFUND", _("Частично отменен")
+        FAIL = "fail", _("Провален")
+        REFUND = "refund", _("Отменен")
+        PARTIAL_REFUND = "partial_refund", _("Частично отменен")
 
     payment_status = models.CharField(
         max_length=100,
@@ -151,4 +151,4 @@ class OrderPayment(BaseModel):
         db_table = "order_payment"
 
     def __str__(self):
-        return f"{self.order} | ({self.payment_method}) | {self.payment_status}"
+        return f"{self.order} | {self.payment_method} | {self.payment_status}"

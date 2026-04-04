@@ -40,9 +40,6 @@ Usage: {% include 'components/product_card.html' with product=product %}
                     <span class="price-old">{{ product.old_price }} ₴</span>
                 {% endif %}
             </div>
-            {% if product.brand %}
-                <p class="product-card-brand">{{ product.brand.name }}</p>
-            {% endif %}
         </div>
     </a>
 

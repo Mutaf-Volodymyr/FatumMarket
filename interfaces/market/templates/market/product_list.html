@@ -1,32 +1,26 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Товары - FatumMarket{% endblock %}
+{% block title %}Товары - Fatum.Fit{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="products-filters">
         <div class="categories-brands-wrapper">
             <button type="button" class="btn btn-secondary categories-brands-toggle" id="categoriesBrandsToggle">
-                Категории и Бренды
+                Категории
             </button>
             <div class="categories-brands-dropdown" id="categoriesBrandsDropdown">
                 <div class="categories-brands-content">
                     <div class="categories-section">
                         <h4 class="dropdown-section-title">Категории</h4>
                         {% for category in root_categories %}
-                            <a href="{% url 'market:category_detail' category.slug %}" 
+                            <a href="{% url 'market:category_detail' category.slug %}"
                                class="dropdown-item category-item-link"
                                data-category-id="{{ category.id }}">
                                 {{ category.name }}
                             </a>
                         {% endfor %}
-                    </div>
-                    <div class="brands-section">
-                        <h4 class="dropdown-section-title">Бренды</h4>
-                        <a href="{% url 'market:brand_list' %}" class="dropdown-item brands-link">
-                            Все бренды
-                        </a>
                     </div>
                 </div>
             </div>

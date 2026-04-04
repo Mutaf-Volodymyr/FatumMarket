@@ -222,21 +222,130 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
+        function updateFinalPrice(deliveryCost) {
+            window.cartDeliveryCost = deliveryCost;
+            const finalPriceEl = document.querySelector('#finalPrice');
+            if (finalPriceEl && typeof window.formatPrice === 'function') {
+                const itemsFinal = window.cartItemsFinalPrice || 0;
+                finalPriceEl.textContent = `${window.formatPrice(itemsFinal + deliveryCost)} ₴`;
+            }
+            document.dispatchEvent(new CustomEvent('deliveryCostChanged', { detail: { cost: deliveryCost } }));
+        }
+
+        function setupPickupPlaceRadios() {
+            const radios = document.querySelectorAll('.pickup-place-radio');
+            radios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const pickupInputs = document.querySelectorAll('[id$="pickupPlaceInput"]');
+                    pickupInputs.forEach(input => {
+                        input.value = this.dataset.address || '';
+                    });
+                });
+                // Init with first checked
+                if (radio.checked) {
+                    const pickupInputs = document.querySelectorAll('[id$="pickupPlaceInput"]');
+                    pickupInputs.forEach(input => {
+                        input.value = radio.dataset.address || '';
+                    });
+                }
+            });
+        }
+
+        function setupCourierCityRadios() {
+            const radios = document.querySelectorAll('.courier-city-radio');
+            radios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const city = this.dataset.city || '';
+                    const cost = parseFloat(this.dataset.cost || 0);
+
+                    // Show street address input
+                    const streetGroups = document.querySelectorAll('[id$="courierStreetGroup"]');
+                    streetGroups.forEach(group => {
+                        group.hidden = false;
+                        group.classList.add('is-visible');
+                    });
+
+                    // Update delivery cost hidden input
+                    const costInputs = document.querySelectorAll('[id$="deliveryCostInput"]');
+                    costInputs.forEach(input => { input.value = cost; });
+
+                    // Update delivery address combining city + street
+                    updateCourierAddress(city);
+
+                    // Update summary price
+                    const deliveryPriceEl = document.querySelector('#deliveryPrice');
+                    if (deliveryPriceEl && typeof window.formatPrice === 'function') {
+                        deliveryPriceEl.textContent = `${window.formatPrice(cost)} ₴`;
+                    }
+                    updateFinalPrice(cost);
+                });
+            });
+
+            // Update delivery_address when street input changes
+            document.querySelectorAll('.courier-street-input').forEach(input => {
+                input.addEventListener('input', function() {
+                    const cityRadio = document.querySelector('.courier-city-radio:checked');
+                    const city = cityRadio ? cityRadio.dataset.city : '';
+                    updateCourierAddress(city);
+                });
+            });
+        }
+
+        function updateCourierAddress(city) {
+            const streetInput = document.querySelector('.courier-street-input');
+            const street = streetInput ? streetInput.value.trim() : '';
+            const fullAddress = city && street ? `${city}, ${street}` : (city || street);
+            const addressInputs = document.querySelectorAll('[id$="deliveryAddressInput"]');
+            addressInputs.forEach(input => { input.value = fullAddress; });
+        }
+
         function updateDeliveryInfo() {
             const selectedDelivery = document.querySelector('input[name="delivery_type"]:checked');
             const deliveryTypeEl = document.querySelector('#deliveryTypeValue');
+            const deliveryPriceEl = document.querySelector('#deliveryPrice');
 
-            if (selectedDelivery && deliveryTypeEl) {
-                const deliveryPrices = {
-                    'pickup': { name: 'Самовывоз' },
-                    'courier': { name: 'Курьер' },
-                    'nova_posta': { name: 'Nova Posta' }
-                };
+            if (!selectedDelivery) return;
 
-                const delivery = deliveryPrices[selectedDelivery.value] || deliveryPrices['pickup'];
-                deliveryTypeEl.textContent = delivery.name;
+            const deliveryNames = {
+                'pickup': 'Самовывоз',
+                'courier': 'Курьер',
+                'nova_posta': 'Nova Posta'
+            };
+
+            if (deliveryTypeEl) {
+                deliveryTypeEl.textContent = deliveryNames[selectedDelivery.value] || 'Самовывоз';
+            }
+
+            const type = selectedDelivery.value;
+
+            if (type === 'pickup') {
+                if (deliveryPriceEl) deliveryPriceEl.textContent = '0 ₴';
+                updateFinalPrice(0);
+                // Reset hidden inputs
+                document.querySelectorAll('[id$="deliveryCostInput"]').forEach(i => { i.value = '0'; });
+                document.querySelectorAll('[id$="deliveryAddressInput"]').forEach(i => { i.value = ''; });
+            } else if (type === 'courier') {
+                const checkedCity = document.querySelector('.courier-city-radio:checked');
+                if (checkedCity) {
+                    const cost = parseFloat(checkedCity.dataset.cost || 0);
+                    if (deliveryPriceEl && typeof window.formatPrice === 'function') {
+                        deliveryPriceEl.textContent = `${window.formatPrice(cost)} ₴`;
+                    }
+                    updateFinalPrice(cost);
+                } else {
+                    if (deliveryPriceEl) deliveryPriceEl.textContent = 'Оплачивается отдельно';
+                    updateFinalPrice(0);
                 }
+            } else if (type === 'nova_posta') {
+                if (deliveryPriceEl) deliveryPriceEl.textContent = 'Оплачивается отдельно';
+                updateFinalPrice(0);
+                document.querySelectorAll('[id$="deliveryCostInput"]').forEach(i => { i.value = '0'; });
+                document.querySelectorAll('[id$="deliveryAddressInput"]').forEach(i => { i.value = ''; });
+            }
 
+            // Show/hide pickup form
+            const pickupForms = document.querySelectorAll('.pickup-delivery-form');
+            pickupForms.forEach(form => setCollapsibleState(form, type === 'pickup'));
 
             toggleCourierDeliveryForm();
             toggleNovaPostaDeliveryForm();
@@ -258,6 +367,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
+        setupPickupPlaceRadios();
+        setupCourierCityRadios();
         updateDeliveryInfo();
         toggleRecipientFields();
         setupDeliveryDatePicker();

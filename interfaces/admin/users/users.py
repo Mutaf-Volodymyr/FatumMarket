@@ -6,6 +6,14 @@ from apps.users.models import User
 
 
 class CardInlines(admin.TabularInline):
+    fields = (
+        "product",
+        "quantity",
+    )
+    readonly_fields = (
+        "product",
+        "quantity",
+    )
     model = OrderItem
     extra = 0
     can_delete = False
@@ -22,8 +30,25 @@ class CardInlines(admin.TabularInline):
 
 
 class UserOrderItemInlines(CardInlines):
+    fields = (
+        "order_id",
+        "created_at",
+        "status",
+        "product_name",
+        "price",
+        "discount",
+    )
+    readonly_fields = (
+        "order_id",
+        "created_at",
+        "status",
+        "product_name",
+        "price",
+        "discount",
+    )
     verbose_name_plural = _("Покупки")
     verbose_name = _("Покупки")
+    ordering = ("order_id", "-created_at")
 
     def get_queryset(self, request):
         user = request.user

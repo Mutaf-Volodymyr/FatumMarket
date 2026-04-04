@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "rangefilter",
     "phonenumber_field",
     "simple_history",
+    "redis",
     # apps
     "apps.users",
     "apps.orders",
@@ -188,7 +189,7 @@ AUTH_USER_MODEL = "users.User"
 
 MARKET_EMAIL = os.getenv("MARKET_EMAIL", "mutaf.biz@gmail.com")
 MARKET_PHONE = os.getenv("MARKET_PHONE", "+37369096576")
-NOMINATIM_USER_AGENT = "FatumMarket (contact: %s)" % MARKET_EMAIL
+NOMINATIM_USER_AGENT = "Fatum.Fit (contact: %s)" % MARKET_EMAIL
 
 
 # Authentication settings
@@ -201,9 +202,11 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
+REDIS_HOST = os.getenv("REDIS_HOST", "fatum-redis")
+
 # Celery
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://fatum-redis:6379/0")
-CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://fatum-redis:6379/1")
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", f"redis://{REDIS_HOST}:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", f"redis://{REDIS_HOST}:6379/1")
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"

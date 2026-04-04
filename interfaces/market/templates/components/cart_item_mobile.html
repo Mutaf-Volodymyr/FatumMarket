@@ -18,14 +18,13 @@
                 <div class="cart-item-info-header">
                     <div class="cart-item-title">
                         <h3><a href="{% url 'market:product_detail' item.product.slug %}">{{ item.product.name }}</a></h3>
-                        {% if item.product.brand %}
-                            <p class="cart-item-brand">{{ item.product.brand.name }}</p>
-                        {% endif %}
                     </div>
                     <div class="cart-item-total-mobile cart-item-price" data-item-id="{{ item.id }}">
-                        {% with item_price=item.price|default:item.product.price item_discount=item.discount|default:0 %}
-                            {% widthratio item_price 1 item.quantity as item_total %}
-                            <span class="price-current" data-price="{{ item_price }}" data-quantity="{{ item.quantity }}" data-discount="{{ item_discount }}">{{ item_total|floatformat:2 }} ₴</span>
+                        {% with item_price=item.price|default:item.product.price %}
+                            {% with item_old_price=item.product.old_price|default:item_price %}
+                                {% widthratio item_price 1 item.quantity as item_total %}
+                                <span class="price-current" data-price="{{ item_price }}" data-old-price="{{ item_old_price }}" data-quantity="{{ item.quantity }}">{{ item_total|floatformat:2 }} ₴</span>
+                            {% endwith %}
                         {% endwith %}
                     </div>
                 </div>

@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect, render
 
+from apps.delivery.models import CourierDeliveryPrice, PickupPlace
 from apps.orders.domain.order_creator import OrderCreator, OrderCreatorException
 from apps.orders.domain.order_item_card_manager import OrderItemCartManager, OrderItemException
 from apps.products.models import Brand, Category, Product
@@ -154,5 +155,7 @@ def staff_create_order_view(request):
             "products": products,
             "categories": categories,
             "brands": brands,
+            "pickup_places": PickupPlace.objects.all(),
+            "courier_delivery_prices": CourierDeliveryPrice.objects.all().order_by("city"),
         },
     )

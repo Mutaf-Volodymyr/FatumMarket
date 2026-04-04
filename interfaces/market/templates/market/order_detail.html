@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Заказ #{{ order.id }} - FatumMarket{% endblock %}
+{% block title %}Заказ #{{ order.id }} - Fatum.Fit{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -59,8 +59,8 @@
                         </dd>
                     {% endif %}
                     {% if order.delivery.recipient %}
-                        <dt>Получатель:</dt>
-                        <dd>{{ order.delivery.recipient }}</dd>
+                        <dt>Контакты :</dt>
+                        <dd>{{ order.delivery.recipient.phone }}</dd>
                     {% elif order.delivery.unknown_recipient %}
                         <dt>Получатель:</dt>
                         <dd>{{ order.delivery.unknown_recipient }}</dd>
@@ -71,9 +71,9 @@
                 {% endif %}
                 {% if order.payment %}
                     <dt>Оплата:</dt>
-                    <dd>{{ order.payment.get_payment_method_display }}</dd>
+                    <dd>{{ order.payment.payment_method }}</dd>
                     <dt>Статус оплаты:</dt>
-                    <dd>{{ order.payment.get_payment_status_display }}</dd>
+                    <dd>{{ order.payment.payment_status }}</dd>
                 {% else %}
                     <dt>Оплата:</dt>
                     <dd>Не указана</dd>

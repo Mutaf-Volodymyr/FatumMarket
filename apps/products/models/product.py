@@ -29,7 +29,7 @@ class Product(BaseModel, SlugMixin):
     )
     # цены
     price = PriceField(verbose_name=_("Цена"))
-    old_price = PriceField(verbose_name=_("Старая цена"))
+    old_price = PriceField(verbose_name=_("Старая цена"), null=True, blank=True)
     # связи
     category = models.ForeignKey(
         to="products.Category",

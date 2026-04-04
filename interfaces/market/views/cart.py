@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
+from apps.delivery.models import CourierDeliveryPrice, PickupPlace
 from apps.orders.domain.order_item_card_manager import OrderItemCartManager, OrderItemException
 from apps.orders.models import OrderItem
 from interfaces.market.cart_utils import (
@@ -19,6 +20,10 @@ def cart_view(request):
     )
 
     summary_price_context = make_new_summary_price_context(cart_items)
+    summary_price_context["pickup_places"] = PickupPlace.objects.all()
+    summary_price_context["courier_delivery_prices"] = CourierDeliveryPrice.objects.all().order_by(
+        "city"
+    )
 
     return render(request, "market/cart.html", summary_price_context)
 

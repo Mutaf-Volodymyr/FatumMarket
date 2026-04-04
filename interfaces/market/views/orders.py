@@ -84,22 +84,43 @@ def checkout_view(request):
                 }
 
             recipient_data = {}
+            recipient_note = ""
             if request.user.is_authenticated:
                 recipient_type = request.POST.get("recipient_type", "self")
                 if recipient_type == "other":
                     recipient_name = _clean_optional(request.POST.get("recipient_name", "")) or ""
                     recipient_phone = _clean_optional(request.POST.get("recipient_phone", "")) or ""
-                    first_name, last_name = _split_name(recipient_name)
-                    recipient_data = {
-                        "first_name": first_name,
-                        "last_name": last_name,
-                        "phone": recipient_phone,
-                    }
+                    if recipient_phone:
+                        from apps.users.models import User as UserModel
+
+                        existing = UserModel.objects.filter(phone=recipient_phone).first()
+                        if existing:
+                            recipient_data = {
+                                "id": existing.id,
+                                "email": existing.email,
+                                "first_name": existing.first_name,
+                                "last_name": existing.last_name,
+                                "phone": str(existing.phone),
+                            }
+                        else:
+                            recipient_note = f"Получатель: {recipient_name}, {recipient_phone}."
+
+            delivery_comment = _clean_optional(request.POST.get("delivery_comment"))
+            if recipient_note:
+                delivery_comment = (recipient_note + " " + (delivery_comment or "")).strip()
+            if delivery_type == Delivery.DeliveryTypeChoices.pickup:
+                pickup_place = _clean_optional(request.POST.get("pickup_place"))
+                if pickup_place:
+                    delivery_comment = (
+                        (recipient_note + " " + pickup_place).strip()
+                        if recipient_note
+                        else pickup_place
+                    )
 
             delivery_data = {
                 "delivery_type": delivery_type,
-                "delivery_cost": _clean_optional(request.POST.get("delivery_cost")),
-                "comment": _clean_optional(request.POST.get("delivery_comment")),
+                "delivery_cost": _clean_optional(request.POST.get("delivery_cost")) or Decimal("0"),
+                "comment": delivery_comment,
                 "raw_address": _clean_optional(request.POST.get("delivery_address")),
             }
 
@@ -128,12 +149,15 @@ def checkout_view(request):
 
     total_price = Decimal("0.00")
     total_discount = Decimal("0.00")
+    final_price = Decimal("0.00")
 
     for item in cart_items:
-        item_total = (item.price or item.product.price) * item.quantity
-        total_price += item_total
-        item_discount = (item.discount or Decimal("0.00")) * item.quantity
-        total_discount += item_discount
+        current_price = item.price or item.product.price
+        old_price = item.product.old_price or current_price
+        total_price += old_price * item.quantity
+        final_price += current_price * item.quantity
+        if old_price > current_price:
+            total_discount += (old_price - current_price) * item.quantity
 
     return render(
         request,
@@ -142,7 +166,7 @@ def checkout_view(request):
             "cart_items": cart_items,
             "total_price": total_price,
             "total_discount": total_discount,
-            "final_price": total_price - total_discount,
+            "final_price": final_price,
         },
     )
 

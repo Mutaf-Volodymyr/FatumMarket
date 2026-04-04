@@ -1,10 +1,17 @@
 <div class="cart-section">
     <h2 class="cart-section-title">Доставка</h2>
+
+    <!-- Глобальные скрытые поля для отправки формы -->
+    <input type="hidden" name="delivery_cost" id="{{ id_prefix }}deliveryCostInput" value="0">
+    <input type="hidden" name="delivery_address" id="{{ id_prefix }}deliveryAddressInput" value="">
+    <input type="hidden" name="pickup_place" id="{{ id_prefix }}pickupPlaceInput" value="">
+
     <div class="delivery-options">
         <div class="delivery-option">
             <input type="radio" name="delivery_type" id="{{ id_prefix }}delivery_pickup" value="pickup" checked class="delivery-radio">
             <label for="{{ id_prefix }}delivery_pickup" class="delivery-label">
                 <span class="delivery-name">Самовывоз</span>
+                <span class="delivery-price-badge">0 ₴</span>
             </label>
         </div>
         <div class="delivery-option">
@@ -20,10 +27,48 @@
             </label>
         </div>
     </div>
+
+    <!-- Самовывоз: выбор места -->
+    <div class="delivery-form pickup-delivery-form" id="{{ id_prefix }}pickupDeliveryForm" hidden>
+        {% if pickup_places %}
+            <div class="form-group">
+                <label class="form-label-sm">Место самовывоза</label>
+                <div class="location-scroll-list">
+                {% for place in pickup_places %}
+                    <div class="pickup-place-option">
+                        <input type="radio" name="pickup_place_radio" id="{{ id_prefix }}pickup_{{ place.id }}"
+                               value="{{ place.id }}" data-address="{{ place.address }}"
+                               class="pickup-place-radio" {% if forloop.first %}checked{% endif %}>
+                        <label for="{{ id_prefix }}pickup_{{ place.id }}">{{ place.address }}</label>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <p class="delivery-note">Адрес самовывоза уточняйте у менеджера</p>
+        {% endif %}
+    </div>
+
+    <!-- Курьер: выбор города + адрес -->
     <div class="delivery-form courier-delivery-form" id="{{ courier_form_id }}" hidden>
-        <div class="form-group">
-            <label for="{{ id_prefix }}courierAddress">Адрес доставки</label>
-            <input type="text" id="{{ id_prefix }}courierAddress" name="delivery_address" class="form-control" autocomplete="off" data-courier-required>
+        {% if courier_delivery_prices %}
+            <div class="form-group">
+                <label class="form-label-sm">Город доставки</label>
+                <div class="location-scroll-list">
+                {% for item in courier_delivery_prices %}
+                    <div class="courier-city-option">
+                        <input type="radio" name="courier_city_radio" id="{{ id_prefix }}city_{{ item.id }}"
+                               value="{{ item.id }}" data-city="{{ item.city }}" data-cost="{{ item.cost }}"
+                               class="courier-city-radio">
+                        <label for="{{ id_prefix }}city_{{ item.id }}">{{ item.city }} — {{ item.cost }} ₴</label>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        <div class="form-group courier-street-group" id="{{ id_prefix }}courierStreetGroup" {% if courier_delivery_prices %}hidden{% endif %}>
+            <label for="{{ id_prefix }}courierStreet">Улица, дом</label>
+            <input type="text" id="{{ id_prefix }}courierStreet" class="form-control courier-street-input" autocomplete="off" placeholder="ул. Примерная, 1">
         </div>
         {% if show_delivery_date %}
             <div class="form-row">
@@ -43,13 +88,7 @@
                             <button type="button" class="date-picker-nav" id="{{ id_prefix }}deliveryDateNext" aria-label="Следующий месяц">›</button>
                         </div>
                         <div class="date-picker-weekdays">
-                            <span>Пн</span>
-                            <span>Вт</span>
-                            <span>Ср</span>
-                            <span>Чт</span>
-                            <span>Пт</span>
-                            <span>Сб</span>
-                            <span>Вс</span>
+                            <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
                         </div>
                         <div class="date-picker-days" id="{{ id_prefix }}deliveryDateDays"></div>
                     </div>
@@ -62,14 +101,12 @@
         </div>
     </div>
 
+    <!-- Nova Posta -->
     <div class="delivery-form nova-posta-delivery-form" id="{{ nova_posta_form_id }}" hidden>
+        <p class="delivery-note delivery-note-info">Оплачивается отдельно по тарифам перевозчика</p>
         <div class="form-group">
             <label for="{{ id_prefix }}postOffice">Номер отделения</label>
-            <input type="number" id="{{ id_prefix }}postOffice" name="post_office_number" class="form-control" autocomplete="off" data-courier-required>
-        </div>
-        <div class="form-group">
-            <label for="{{ id_prefix }}deliveryComment">Комментарий к доставке</label>
-            <textarea id="{{ id_prefix }}deliveryComment" name="delivery_comment" rows="3" class="form-control"></textarea>
+            <input type="number" id="{{ id_prefix }}postOffice" name="post_office_number" class="form-control" autocomplete="off">
         </div>
     </div>
 </div>
