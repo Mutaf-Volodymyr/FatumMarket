@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
 from apps.orders.models import OrderItem
-from apps.products.models import Product, ProductImage, ProductSpecification
+from apps.products.models import Product, ProductImageThrough, ProductSpecification
 from apps.supply.models import ProductSupply
 
 
@@ -30,7 +30,7 @@ class ProductOrdersInline(admin.TabularInline):
 
 
 class ProductImageInline(admin.TabularInline):
-    model = ProductImage
+    model = ProductImageThrough
     extra = 0
 
 
@@ -62,8 +62,9 @@ class ProductAdmin(admin.ModelAdmin):
         "price",
         "old_price",
         "discount",
+        "group",
     )
-    readonly_fields = ("discount",)
+    readonly_fields = ("discount", "group")
     list_filter = (
         "is_active",
         "category",
@@ -71,6 +72,7 @@ class ProductAdmin(admin.ModelAdmin):
         "product_specification__specification_value__value",
     )
     search_fields = ("name", "description")
+    ordering = ("name",)
 
     inlines = [
         SpecificationInline,

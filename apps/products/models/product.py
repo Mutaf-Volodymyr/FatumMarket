@@ -6,19 +6,26 @@ from django.utils.translation import gettext_lazy as _
 
 from base.for_model import BaseModel, PositionField, PriceField, SlugMixin
 
-__all__ = [
-    "Product",
-    "ProductImage",
-    "ProductSpecification",
-]
+__all__ = ["Product", "ProductImage", "ProductSpecification", "ProductGroup", "ProductImageThrough"]
 
 
 def get_upload_path(instance, filename):
-    return f"products/{instance.product_id}/{filename}"
+    return f"products/{instance.id}/{filename}"
 
 
 class Product(BaseModel, SlugMixin):
-    name = models.CharField(max_length=256, unique=True, verbose_name=_("Название"))
+    class Meta:
+        verbose_name = _("Товар")
+        verbose_name_plural = _("Товары")
+        db_table = "product"
+        indexes = [
+            models.Index(
+                fields=["name"],
+            ),
+        ]
+
+    name = models.CharField(max_length=256, verbose_name=_("Название"))
+
     description = models.TextField(null=True, blank=True, verbose_name=_("Описание"))
     is_active = models.BooleanField(default=False, verbose_name=_("Активно"))
     # количество
@@ -49,6 +56,14 @@ class Product(BaseModel, SlugMixin):
         related_name="products",
         through="products.ProductSpecification",
     )
+    group = models.ForeignKey(
+        to="products.ProductGroup",
+        on_delete=models.PROTECT,
+        related_name="products",
+        null=True,
+        blank=True,
+        verbose_name=_("Группа товаров"),
+    )
 
     @property
     @admin.display(description=_("Скидка"))
@@ -67,37 +82,64 @@ class Product(BaseModel, SlugMixin):
     def __str__(self):
         return self.name
 
-    class Meta:
-        verbose_name = _("Товар")
-        verbose_name_plural = _("Товары")
-        db_table = "product"
-        indexes = [
-            models.Index(
-                fields=["name"],
-            ),
-        ]
+    def save(self, *args, **kwargs):
+        if not self.group_id:
+            group, created = ProductGroup.objects.get_or_create(
+                name=self.name,
+                defaults={
+                    "description": self.description,
+                    "category": self.category,
+                },
+            )
+            self.group = group
+
+        return super().save(*args, **kwargs)
 
 
-class ProductImage(BaseModel):
+class ProductImageThrough(BaseModel):
     product = models.ForeignKey(
         to="products.Product",
         on_delete=models.CASCADE,
+        related_name="images_through",
+    )
+    image = models.ForeignKey(
+        to="products.ProductImage",
+        on_delete=models.CASCADE,
+        related_name="images_through",
+    )
+    position = PositionField()
+
+    class Meta:
+        verbose_name = _("Изображение товара [позиция]")
+        verbose_name_plural = _("Изображение товаров [позиция]")
+        db_table = "product_image_through"
+        ordering = ("position",)
+
+    def __str__(self):
+        return _("Изображение товара: ") + str(self.product.name)
+
+    def __repr__(self):
+        return f"ProductImage('{self.image}' -> {self.product.name})"
+
+
+class ProductImage(BaseModel):
+    image = models.ImageField(upload_to=get_upload_path, verbose_name=_("Изображение"))
+    products = models.ManyToManyField(
+        to="products.Product",
+        through="products.ProductImageThrough",
         related_name="images",
     )
-    image = models.ImageField(upload_to=get_upload_path, verbose_name=_("Изображение"))
-    position = PositionField()
 
     class Meta:
         verbose_name = _("Изображение товара")
         verbose_name_plural = _("Изображение товаров")
         db_table = "product_image"
-        ordering = ("position",)
 
     def __str__(self):
-        return _("Изображение товара: ") + str(self.product)
+        return _("Изображение товара: ") + str(self.id)
 
     def __repr__(self):
-        return f"ProductImage('{self.product}' -> {self.image.path})"
+        return f"ProductImage('{self.id}' -> {self.image.path})"
 
 
 class ProductSpecification(BaseModel):
@@ -140,3 +182,20 @@ class ProductSpecification(BaseModel):
 
     def __str__(self):
         return f"{self.product} | {self.specification_value}"
+
+
+class ProductGroup(BaseModel):
+    name = models.CharField(max_length=256, unique=True, verbose_name=_("Название"))
+    description = models.TextField(null=True, blank=True, verbose_name=_("Описание"))
+    category = models.ForeignKey(
+        to="products.Category",
+        on_delete=models.PROTECT,
+        related_name="product_groups",
+        verbose_name=_("Категория"),
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = _("Группа товаров")
+        verbose_name_plural = _("Группы товаров")

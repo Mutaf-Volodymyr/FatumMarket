@@ -7,6 +7,7 @@ JAZZMIN_SETTINGS = {
     "topmenu_links": [
         {"name": "Главная", "url": "/admin", "permissions": ["auth.view_user"]},
         {"name": "Товары", "url": "/admin/products/product/", "permissions": ["auth.view_user"]},
+        {"name": "Заказы", "url": "/admin/orders/order/", "permissions": ["auth.view_user"]},
     ],
     "show_sidebar": True,
     "hide_app_list": False,
