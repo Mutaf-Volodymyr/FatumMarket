@@ -3,6 +3,17 @@
 from django.db import migrations, models
 
 
+def deduplicate_specification_values(apps, schema_editor):
+    SpecificationValue = apps.get_model('products', 'SpecificationValue')
+
+    seen = set()
+    for spec in SpecificationValue.objects.order_by('id'):
+        if spec.value in seen:
+            spec.delete()
+        else:
+            seen.add(spec.value)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -19,6 +30,7 @@ class Migration(migrations.Migration):
             name='product_name_display',
             field=models.BooleanField(default=False, verbose_name='Показывать в имени товара'),
         ),
+        migrations.RunPython(deduplicate_specification_values, migrations.RunPython.noop),
         migrations.AlterField(
             model_name='specificationvalue',
             name='value',
