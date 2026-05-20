@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ product.name }} - Fatum.Fit{% endblock %}
+{% block title %}{{ product.full_name }} - Fatum.Fit{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -14,19 +14,19 @@
         {% endfor %}
         <a href="{% url 'market:category_detail' slug=product.category.slug %}">{{ product.category.name }}</a>
         <span> / </span>
-        <span>{{ product.name }}</span>
+        <span>{{ product.full_name }}</span>
     </nav>
     
     <div class="product-detail">
         <div class="product-detail-images">
             {% if product.images.all %}
                 <div class="product-main-image" id="productMainImage" onclick="openImageModal(event, '{{ product.images.first.image.url }}')">
-                    <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" id="mainProductImage">
+                    <img src="{{ product.images.first.image.url }}" alt="{{ product.full_name }}" id="mainProductImage">
                 </div>
                 {% if product.images.count > 1 %}
                     <div class="product-thumbnails">
                         {% for image in product.images.all %}
-                            <img src="{{ image.image.url }}" alt="{{ product.name }}" 
+                            <img src="{{ image.image.url }}" alt="{{ product.full_name }}" 
                                  class="thumbnail {% if forloop.first %}active{% endif %}"
                                  onclick="changeMainImage(this.src)"
                                  data-full-image="{{ image.image.url }}">
@@ -47,11 +47,11 @@
                 <button class="image-modal-prev" onclick="changeModalImage(-1, event)">&#10094;</button>
                 <button class="image-modal-next" onclick="changeModalImage(1, event)">&#10095;</button>
             {% endif %}
-            <img class="image-modal-content" id="modalImage" alt="{{ product.name }}" onclick="event.stopPropagation()">
+            <img class="image-modal-content" id="modalImage" alt="{{ product.full_name }}" onclick="event.stopPropagation()">
         </div>
         
         <div class="product-detail-info">
-            <h1 class="product-detail-title">{{ product.name }}</h1>
+            <h1 class="product-detail-title">{{ product.full_name }}</h1>
             
             <div class="product-detail-price">
                 <span class="price-current">{{ product.price }} ₴</span>

@@ -51,7 +51,15 @@ class ProductSupplyInline(admin.StackedInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "is_active", "quantity", "price", "has_discount")
+    list_display = (
+        "__str__",
+        "category",
+        "is_active",
+        "quantity",
+        "price",
+        "old_price",
+        "has_discount",
+    )
     fields = (
         "name",
         "description",
@@ -70,6 +78,12 @@ class ProductAdmin(admin.ModelAdmin):
         "category",
         "brand",
         "product_specification__specification_value__value",
+    )
+    list_editable = (
+        "is_active",
+        "quantity",
+        "price",
+        "old_price",
     )
     search_fields = ("name", "description")
     ordering = ("name",)

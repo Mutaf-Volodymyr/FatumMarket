@@ -26,6 +26,8 @@ class Product(BaseModel, SlugMixin):
 
     name = models.CharField(max_length=256, verbose_name=_("Название"))
 
+    full_name = models.CharField(max_length=256, null=True, blank=True, editable=False)
+
     description = models.TextField(null=True, blank=True, verbose_name=_("Описание"))
     is_active = models.BooleanField(default=False, verbose_name=_("Активно"))
     # количество
@@ -80,7 +82,23 @@ class Product(BaseModel, SlugMixin):
         return self.discount > 0
 
     def __str__(self):
-        return self.name
+        if not self.full_name:
+            self.make_fullname()
+        return self.full_name
+
+    def make_fullname(self, save: bool = True):
+        from apps.products.models import SpecificationValue
+
+        display_names = SpecificationValue.objects.filter(
+            specification_name__product_name_display=True,
+            products__id=self.id,
+        ).values_list("value", flat=True)
+
+        postfix = " ".join(f"[{n}]" for n in display_names)
+        fullname = f"{self.name} {postfix}"
+        self.full_name = fullname
+        if save:
+            self.save(update_fields=["full_name"])
 
     def save(self, *args, **kwargs):
         if not self.group_id:
@@ -92,6 +110,8 @@ class Product(BaseModel, SlugMixin):
                 },
             )
             self.group = group
+
+        self.make_fullname(save=False)
 
         return super().save(*args, **kwargs)
 

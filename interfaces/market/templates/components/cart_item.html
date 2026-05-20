@@ -13,14 +13,14 @@
     <div class="cart-item-image">
         {% with item.product.images.first as first_image %}
             {% if first_image %}
-                <img src="{{ first_image.image.url }}" alt="{{ item.product.name }}">
+                <img src="{{ first_image.image.url }}" alt="{{ item.product.full_name }}">
             {% else %}
                 <div class="placeholder-image">Нет изображения</div>
             {% endif %}
         {% endwith %}
     </div>
     <div class="cart-item-info">
-        <h3><a href="{% url 'market:product_detail' item.product.slug %}">{{ item.product.name }}</a></h3>
+        <h3><a href="{% url 'market:product_detail' item.product.slug %}">{{ item.product.full_name }}</a></h3>
         <div class="cart-item-unit-price">
             {% with item_price=item.price|default:item.product.price %}
                 <span class="price-current">{{ item_price|floatformat:2 }} ₴</span>

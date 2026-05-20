@@ -19,6 +19,9 @@ class SpecificationName(BaseModel):
         verbose_name=_("Единица измерения"),
     )
     filter_hide = models.BooleanField(default=False, verbose_name="Не показывать в фильтрах")
+    product_name_display = models.BooleanField(
+        default=False, verbose_name="Показывать в имени товара"
+    )
 
     class Meta:
         db_table = "specification_name"
@@ -36,12 +39,13 @@ class SpecificationValue(BaseModel):
         related_name="values",
         verbose_name=_("Название спецификации"),
     )
-    value = models.CharField(max_length=255, verbose_name=_("Название"))
+    value = models.CharField(max_length=255, verbose_name=_("Название"), unique=True)
 
     class Meta:
         db_table = "specification_value"
         verbose_name = _("Значение спецификации")
         verbose_name_plural = _("Значение спецификаций")
+        ordering = ("specification_name",)
 
     def __str__(self):
         return f"{self.specification_name.name} : {self.value}"

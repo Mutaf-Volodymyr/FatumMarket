@@ -9,7 +9,7 @@ Usage: {% include 'components/product_card.html' with product=product %}
                 <div class="product-card-carousel" data-product-id="{{ product.id }}">
                     {% for image in product.images.all %}
                         <div class="carousel-slide {% if forloop.first %}active{% endif %}">
-                            <img src="{{ image.image.url }}" alt="{{ product.name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}">
+                            <img src="{{ image.image.url }}" alt="{{ product.full_name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}">
                         </div>
                     {% endfor %}
                     {% if product.images.count > 1 %}
@@ -33,7 +33,7 @@ Usage: {% include 'components/product_card.html' with product=product %}
         {% endif %}
         
         <div class="product-card-content">
-            <h3 class="product-card-title">{{ product.name }}</h3>
+            <h3 class="product-card-title">{{ product.full_name }}</h3>
             <div class="product-card-price">
                 <span class="price-current">{{ product.price }} ₴</span>
                 {% if product.old_price %}
