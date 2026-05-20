@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.forms import SelectMultiple
+from django.utils.safestring import mark_safe
 
 from apps.products.models import Product, ProductGroup, ProductSpecification, SpecificationValue
 
@@ -57,9 +58,22 @@ class ProductInline(admin.StackedInline):
         "price",
         "old_price",
     ]
+    readonly_fields = ["duplicate_button"]
 
     def get_fields(self, request, obj=None):
-        return self.fields + ["specifications"]
+        return self.fields + ["specifications", "duplicate_button"]
+
+    def duplicate_button(self, obj):
+        if not obj.pk:
+            return ""
+        return mark_safe(
+            '<button type="button" class="button duplicate-product-btn">Дублировать</button>'
+        )
+
+    duplicate_button.short_description = ""
+
+    class Media:
+        js = ("admin/js/duplicate_inline.js",)
 
 
 @admin.register(ProductGroup)

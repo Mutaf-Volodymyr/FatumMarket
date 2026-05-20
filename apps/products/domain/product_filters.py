@@ -33,7 +33,9 @@ class ProductFiltersBuilder:
 
         # Получаем все спецификации, которые используются в этих товарах
         specifications = (
-            ProductSpecification.objects.filter(product_id__in=product_ids)
+            ProductSpecification.objects.filter(
+                product_id__in=product_ids, specification_name__filter_hide=False
+            )
             .select_related("specification_name", "specification_value")
             .values(
                 "specification_name_id",
