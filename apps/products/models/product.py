@@ -168,6 +168,15 @@ class ProductSpecification(BaseModel):
     def save(self, *args, **kwargs):
         if self.specification_name_id is None:
             self.specification_name_id = self.specification_value.specification_name_id
+
+        conflict = ProductSpecification.objects.filter(
+            product_id=self.product_id, specification_name_id=self.specification_name_id
+        ).exclude(pk=self.pk)
+        if conflict.exists():
+            from django.core.exceptions import ValidationError
+
+            raise ValidationError(f"Товар уже имеет спецификацию «{self.specification_name}».")
+
         return super().save(*args, **kwargs)
 
     class Meta:

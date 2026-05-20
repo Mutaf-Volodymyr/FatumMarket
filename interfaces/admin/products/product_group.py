@@ -22,6 +22,19 @@ class ProductInlineForm(forms.ModelForm):
         if self.instance.pk:
             self.fields["specifications"].initial = self.instance.specifications.all()
 
+    def clean_specifications(self):
+        specifications = self.cleaned_data.get("specifications", [])
+        seen = {}
+        for spec_value in specifications:
+            name_id = spec_value.specification_name_id
+            if name_id in seen:
+                raise forms.ValidationError(
+                    f"Нельзя выбрать два значения одной спецификации: "
+                    f"«{seen[name_id]}» и «{spec_value}»."
+                )
+            seen[name_id] = spec_value
+        return specifications
+
     def save(self, commit=True):
         instance = super().save(commit=commit)
         if commit:
