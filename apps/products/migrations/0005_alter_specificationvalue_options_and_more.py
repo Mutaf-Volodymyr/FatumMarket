@@ -16,6 +16,8 @@ def deduplicate_specification_values(apps, schema_editor):
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
     dependencies = [
         ('products', '0004_alter_productgroup_options_alter_product_group'),
     ]
