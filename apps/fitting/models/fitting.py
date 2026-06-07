@@ -117,12 +117,12 @@ class Fitting(BaseModel):
         show_room: PickupPlace,
         user: settings.AUTH_USER_MODEL = None,
     ):
-        if self.status is not self.FittingStatus.DRAFT:
+        if self.status != self.FittingStatus.DRAFT:
             raise ValidationError("Only Draft Fitting can by confirmed.")
         if not show_room.show_room:
             raise ValidationError("Неверный Show Room.")
 
-        user = self.user if user is None else user
+        user = self.user if self.user is not None else user
 
         if not user or user.is_anonymous:
             raise ValidationError("")

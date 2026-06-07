@@ -66,21 +66,25 @@ class DraftFittingService(BaseService):
         *,
         date: FutureDatetime,
         show_room_id: int,
-    ) -> None:
+    ) -> Fitting:
+        draft = self.draft_fitting
 
         customer = (
-            self._draft_fitting.user or self.user or getattr(self._customer_service, "user", None)
+            draft.user
+            or self.user
+            or (self._customer_service.user if self._customer_service else None)
         )
         if customer is None:
             raise DraftFittingException("This user does not exist")
-        show_room = self._draft_fitting.room or show_room_id
 
-        self._draft_fitting.confirm_fitting(
+        show_room = draft.show_room or self.get_show_room_or_error(show_room_id)
+
+        draft.confirm(
             user=customer,
             date=date,
             show_room=show_room,
         )
-        return self._draft_fitting
+        return draft
 
     def get_draft_fitting_products(self) -> QuerySet[Product]:
         return self.draft_fitting.products.all()  # type: ignore

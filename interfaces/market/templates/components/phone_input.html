@@ -1,0 +1,11 @@
+{% comment %}
+Usage: {% include 'components/phone_input.html' with field_name="phone" field_id="phone" initial_value=user.phone is_required=True %}
+{% endcomment %}
+<div class="phone-input-group">
+    <select class="phone-prefix-select" aria-label="Код страны">
+        <option value="+373">+373</option>
+        <option value="+380">+380</option>
+    </select>
+    <input type="text" id="{{ field_id }}" class="phone-digits-input" inputmode="numeric" maxlength="12" placeholder="69123456" {% if is_required %}required{% endif %}>
+    <input type="hidden" name="{{ field_name }}" class="phone-hidden-input" value="{{ initial_value|default:'' }}">
+</div>

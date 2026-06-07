@@ -52,13 +52,21 @@ def fitting_add_view(request, product_id):
 @require_POST
 def fitting_confirm_view(request):
     try:
+        date_str = request.POST.get("date", "")
+        if not date_str:
+            raise DraftFittingException("Выберите дату и время примерки")
+
+        show_room_id = request.POST.get("show_room_id")
+        if not show_room_id:
+            raise DraftFittingException("Выберите шоурум")
+
         customer_service = CustomerService(
             UserSchema(
                 first_name=request.POST.get("first_name"),
-                last_name=request.POST.get("last_name"),
                 phone=request.POST.get("phone"),
                 id=request.user.id if request.user.is_authenticated else None,
                 email=request.POST.get("email"),
+                last_name=None,
             )
         )
 
@@ -68,16 +76,18 @@ def fitting_confirm_view(request):
             customer_service=customer_service,
         )
         fitting = fitting_service.confirm_fitting(
-            show_room_id=int(request.POST.get("show_room_id")),
-            date=FutureDatetime(request.POST.get("date")),
+            show_room_id=int(show_room_id),
+            date=FutureDatetime(date_str),
         )
+        phone = fitting.user.phone if fitting.user else request.POST.get("phone", "")
         messages.success(
             request,
-            f"Запись на примерку создана! Мы свяжемся с вами по номеру {fitting.user.phone}.",
+            f"Запись на примерку создана! Мы свяжемся с вами по номеру {phone}.",
         )
         return redirect("market:fitting")
-    except DraftFittingException as e:
+    except (DraftFittingException, ValueError) as e:
         messages.error(request, str(e))
+        return redirect("market:fitting")
 
 
 @require_POST

@@ -51,14 +51,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="recipientPhone">Телефон получателя</label>
-                                    <div class="phone-input-group">
-                                        <select class="phone-prefix-select" aria-label="Код страны">
-                                            <option value="+373">+373</option>
-                                            <option value="+380">+380</option>
-                                        </select>
-                                        <input type="text" id="recipientPhone" class="phone-digits-input" inputmode="numeric" maxlength="12" placeholder="69123456" data-recipient-required>
-                                        <input type="hidden" name="recipient_phone" class="phone-hidden-input">
-                                    </div>
+                                    {% include 'components/phone_input.html' with field_name="recipient_phone" field_id="recipientPhone" is_required=False %}
                                 </div>
                             </div>
                         {% else %}
@@ -69,14 +62,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="customerPhone">Телефон</label>
-                                    <div class="phone-input-group">
-                                        <select class="phone-prefix-select" aria-label="Код страны">
-                                            <option value="+373">+373</option>
-                                            <option value="+380">+380</option>
-                                        </select>
-                                        <input type="text" id="customerPhone" class="phone-digits-input" inputmode="numeric" maxlength="12" placeholder="69123456" required>
-                                        <input type="hidden" name="customer_phone" class="phone-hidden-input">
-                                    </div>
+                                    {% include 'components/phone_input.html' with field_name="customer_phone" field_id="customerPhone" is_required=True %}
                                 </div>
                             </div>
                         {% endif %}
