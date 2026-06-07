@@ -129,3 +129,7 @@ class User(AbstractUser, BaseModel):
         if self.is_staff:
             return f"{self.username} [{self.staff_status}]"
         return str(self.username)
+
+    def activate_user(self):
+        self.is_active = True
+        self.save(update_fields=["is_active"])

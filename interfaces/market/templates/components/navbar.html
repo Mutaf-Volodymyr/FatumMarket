@@ -12,7 +12,16 @@
                         <span class="link-text">Товары</span>
                     </a>
 
-                        <a href="{% url 'market:cart' %}" class="navbar-link navbar-link-cart">
+                        <a href="{% url 'market:showroom' %}" class="navbar-link">
+                        <span class="link-text">ShowRoom</span>
+                    </a>
+                    <a href="{% url 'market:fitting' %}" class="navbar-link navbar-link-cart navbar-link-fitting">
+                        <span class="link-text">Примерка</span>
+                        {% if fitting_count > 0 %}
+                            <span class="cart-badge">{{ fitting_count }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="{% url 'market:cart' %}" class="navbar-link navbar-link-cart">
                             <span class="link-text">Корзина</span>
                             {% if cart_count > 0 %}
                                 <span class="cart-badge">{{ cart_count }}</span>
@@ -22,11 +31,6 @@
                         <a href="{% url 'market:account' %}" class="navbar-link">
                             <span class="link-text">Кабинет</span>
                         </a>
-                        {% if user.staff_status in 'manager sales_man owner developer' %}
-                            <a href="{% url 'market:staff_create_order' %}" class="navbar-link">
-                                <span class="link-text">STAFF</span>
-                            </a>
-                        {% endif %}
                     {% endif %}
                 </div>
                 <div class="navbar-menu-auth">

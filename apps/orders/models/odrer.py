@@ -1,4 +1,3 @@
-from django.contrib.sessions.models import Session
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import JSONField
@@ -15,9 +14,6 @@ class Order(BaseModel, UlidPrimaryKeyMixin):
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         verbose_name=_("Клиент"),
-    )
-    session = models.ForeignKey(
-        Session, on_delete=models.SET_NULL, verbose_name=_("Сессия"), null=True, blank=True
     )
 
     class OrderStatus(models.TextChoices):
@@ -73,8 +69,8 @@ class OrderItem(BaseModel):
         null=True,
         blank=True,
     )
-    session = models.ForeignKey(
-        Session, on_delete=models.SET_NULL, verbose_name=_("Сессия"), null=True, blank=True
+    session_key = models.CharField(
+        max_length=40, null=True, blank=True, verbose_name=_("Сессия"), db_index=True
     )
 
     class OrderItemStatus(models.TextChoices):

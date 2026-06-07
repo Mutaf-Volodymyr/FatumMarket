@@ -6,14 +6,14 @@ from django.utils.translation import gettext_lazy as _
 from base.for_model import BaseModel, PriceField
 from config import settings
 
-__all__ = ["Delivery"]
+__all__ = ["Delivery", "PickUpDelivery", "NovaPostaDelivery"]
 
 
 class Delivery(BaseModel):
+
     class DeliveryTypeChoices(models.TextChoices):
-        pickup = "pickup", _("Самовывоз")
-        courier = "courier", _("Курьер")
-        nova_posta = "nova_posta", _("Nova Posta")
+        PICKUP = "pickup", _("Самовывоз")
+        NOVA_POSTA = "nova_posta", _("Nova Posta")
 
     class ReturnChoices(models.TextChoices):
         FULL = "full", _("Полный")
@@ -32,23 +32,12 @@ class Delivery(BaseModel):
         null=True,
         blank=True,
     )
-    # куда
     delivery_type = models.CharField(
         max_length=100,
         choices=DeliveryTypeChoices.choices,
-        default=DeliveryTypeChoices.pickup,
         verbose_name=_("Способ доставки"),
     )
-    address = models.ForeignKey(
-        "address.Address", on_delete=models.PROTECT, verbose_name=_("Адрес"), null=True, blank=True
-    )
-    post_office = models.PositiveIntegerField(
-        verbose_name=_("Номер почтового отделения | почтомата"), null=True, blank=True
-    )
     comment = models.TextField(null=True, blank=True, verbose_name=_("Комментарий"))
-
-    # how money
-    delivery_cost = PriceField(verbose_name=_("Стоимость доставки"), null=True, blank=True)
 
     # result
     is_delivered = models.BooleanField(default=False, verbose_name=_("Доставлено"))
@@ -68,6 +57,8 @@ class Delivery(BaseModel):
         verbose_name = _("Доставка")
         verbose_name_plural = _("Доставки")
         db_table = "delivery"
+
+    DEFAULT_DELIVERY_TYPE: DeliveryTypeChoices = None
 
     def __str__(self):
         is_delivered = "+" if self.is_delivered else "-"
@@ -89,4 +80,52 @@ class Delivery(BaseModel):
             if update_fields:
                 update_fields += update_fields_new
                 kwargs["update_fields"] = update_fields
+        if self.DEFAULT_DELIVERY_TYPE and self.delivery_type != self.DEFAULT_DELIVERY_TYPE:
+            self.delivery_type = self.DeliveryTypeChoices.DEFAULT_DELIVERY_TYPE
         super().save(*args, **kwargs)
+
+
+class PickUpDelivery(Delivery):
+    DEFAULT_DELIVERY_TYPE = Delivery.DeliveryTypeChoices.PICKUP
+
+    pickup_place = models.ForeignKey(
+        to="delivery.PickupPlace",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Pickup Place",
+        related_name="deliveries",
+    )
+
+    class Meta:
+        verbose_name = _("Доставка [Самовывоз]")
+        verbose_name_plural = _("Доставки [Самовывоз]")
+        db_table = "delivery_pickup"
+
+
+class NovaPostaDelivery(Delivery):
+    DEFAULT_DELIVERY_TYPE = Delivery.DeliveryTypeChoices.NOVA_POSTA
+
+    class Meta:
+        verbose_name = _("Доставка [Nova Posta]")
+        verbose_name_plural = _("Доставки [Nova Posta]")
+        db_table = "delivery_nova_posta"
+
+    class NovaPostaDeliveryTypeChoices(models.TextChoices):
+        COURIER = "courier", _("Курьер")
+        PARCEL_LOCKER = "parcel_locker", _("Поштомат")
+        POST_OFFICE = "post_office", _("Отделение")
+
+    address = models.ForeignKey(
+        "address.Address", on_delete=models.PROTECT, verbose_name=_("Адрес"), null=True, blank=True
+    )
+
+    post_office = models.PositiveIntegerField(
+        verbose_name=_("Номер почтового отделения"), null=True, blank=True
+    )
+
+    parcel_locker = models.PositiveIntegerField(
+        verbose_name=_("Номер  почтомата"), null=True, blank=True
+    )
+
+    delivery_cost = PriceField(verbose_name=_("Стоимость доставки"), null=True, blank=True)

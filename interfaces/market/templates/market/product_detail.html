@@ -88,11 +88,20 @@
                             <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ product.quantity }}">
                             <span class="stock-info">В наличии: {{ product.quantity }}</span>
                         </div>
-                        <button type="submit" class="btn btn-large cart-button {% if product.in_cart %}btn-in-cart{% else %}btn-primary{% endif %}" data-product-id="{{ product.id }}">
-                            {% if product.in_cart %}В корзине{% else %}Добавить в корзину{% endif %}
-                        </button>
+                        <div class="detail-actions-row">
+                            <button type="submit" class="btn btn-large cart-button {% if product.id in cart_product_ids %}btn-in-cart{% else %}btn-primary{% endif %}" data-product-id="{{ product.id }}">
+                                {% if product.id in cart_product_ids %}В корзине{% else %}Добавить в корзину{% endif %}
+                            </button>
+                        </div>
                     </form>
-
+                    {% if product.id not in fitting_product_ids %}
+                        <form method="post" action="{% url 'market:fitting_add' product.id %}" class="detail-fitting-form fitting-add-form" data-product-id="{{ product.id }}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-large btn-secondary fitting-button" data-product-id="{{ product.id }}" style="width:50%;">Добавить в примерку</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'market:fitting-confirm' %}" class="btn btn-large btn-in-cart detail-fitting-form" style="display:flex;align-items:center;justify-content:center;">В примерке</a>
+                    {% endif %}
             </div>
         </div>
     </div>

@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "apps.supply",
     "apps.address",
     "apps.delivery",
+    "apps.fitting",
     "interfaces.telegram.tg_actions",
 ]
 
@@ -62,6 +63,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "base.middleware.EnsureSessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -91,7 +93,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "interfaces.market.context_processors.cart_count",
+                "interfaces.market.context_processors.cart_context",
+                "interfaces.market.context_processors.fitting_context",
             ],
         },
     },

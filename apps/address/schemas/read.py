@@ -14,7 +14,3 @@ class AddressSchema(BaseModel):
     longitude: Optional[Decimal]
 
     is_validated: Optional[bool]
-
-
-class CreateAddressSchema(BaseModel):
-    raw_address: Optional[str]

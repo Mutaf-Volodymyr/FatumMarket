@@ -7,7 +7,6 @@ from django.shortcuts import get_object_or_404, render
 
 from apps.products.domain.product_filters import ProductFiltersBuilder
 from apps.products.models import Brand, Category, Product, SpecificationValue
-from interfaces.market.cart_utils import annotate_product_in_carts_by_request
 
 
 def _get_pagination_url(request, page):
@@ -122,8 +121,6 @@ def product_list_view(request):
         # Default sorting (by creation date, newest first)
         products = products.order_by("-created_at")
 
-    products = annotate_product_in_carts_by_request(request=request, product=products)
-
     # Pagination (after all filters and sorting)
     total_products_count = products.count()
     paginator = Paginator(products, 12)
@@ -169,11 +166,6 @@ def product_detail_view(request, slug):
             "product_specification__specification_name",
         )
         .filter(is_active=True)
-    )
-
-    # Annotate with cart status if user is authenticated
-    product_queryset = annotate_product_in_carts_by_request(
-        request=request, product=product_queryset
     )
 
     product = get_object_or_404(product_queryset, slug=slug)

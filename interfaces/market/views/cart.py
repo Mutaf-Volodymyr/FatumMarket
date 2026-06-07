@@ -1,59 +1,46 @@
 from django.contrib import messages
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 
-from apps.delivery.models import CourierDeliveryPrice, PickupPlace
-from apps.orders.domain.order_item_card_manager import OrderItemCartManager, OrderItemException
-from apps.orders.models import OrderItem
-from interfaces.market.cart_utils import (
-    get_cart_queryset_by_request,
-    get_order_item_creator_kwark_by_request,
-    make_new_summary_price_context,
-)
+from apps.delivery.models import PickupPlace
+from apps.orders.domain.order_item_card_service import OrderItemCartService, OrderItemException
+from apps.orders.schemas import OrderItemSchema
+from interfaces.market.cart_utils import make_new_summary_price_context
 
 
 def cart_view(request):
+    service = OrderItemCartService(
+        session_key=request.session.session_key,
+        customer=request.user,
+    )
     cart_items = (
-        get_cart_queryset_by_request(request)
+        service.get_valid_queryset()
         .select_related("product", "product__brand")
         .prefetch_related("product__images")
     )
 
     summary_price_context = make_new_summary_price_context(cart_items)
     summary_price_context["pickup_places"] = PickupPlace.objects.all()
-    summary_price_context["courier_delivery_prices"] = CourierDeliveryPrice.objects.all().order_by(
-        "city"
-    )
 
     return render(request, "market/cart.html", summary_price_context)
 
 
 def cart_add_view(request, product_id):
-    """Add product to cart"""
+    """Add product to cart or update quantity if exists"""
     if request.method == "POST":
 
         success = True
         error_message = None
-
-        quantity = int(request.POST.get("quantity", 1))
-
-        cart_queryset = get_cart_queryset_by_request(request)
-        cart_item = cart_queryset.filter(product_id=product_id).first()
-
+        schema = OrderItemSchema(
+            quantity=int(request.POST.get("quantity", 1)),
+            product_id=product_id,
+        )
+        service = OrderItemCartService(
+            session_key=request.session.session_key,
+            customer=request.user,
+        )
         try:
-            if cart_item:
-                manager = OrderItemCartManager(instance=cart_item)
-                manager.update_quantity(quantity)
-            else:
-                manager = OrderItemCartManager(
-                    data={
-                        "quantity": quantity,
-                        "product_id": product_id,
-                        **get_order_item_creator_kwark_by_request(request),
-                    }
-                )
-                manager.create_cart()
-
+            service.create_cart(schema)
         except OrderItemException as e:
             error_message = str(e)
             success = False
@@ -67,7 +54,7 @@ def cart_add_view(request, product_id):
             request.headers.get("X-Requested-With") == "XMLHttpRequest"
             or request.content_type == "application/json"
         ):
-            cart_count = get_cart_queryset_by_request(request).count()
+            cart_count = service.get_valid_queryset().count()
 
             if success:
                 return JsonResponse({"success": True, "cart_count": cart_count, "in_cart": True})
@@ -89,21 +76,18 @@ def cart_add_view(request, product_id):
 
 def cart_remove_view(request, item_id):
     """Remove item from cart"""
-    cart_item = get_object_or_404(
-        OrderItem,
-        id=item_id,
-        status=OrderItem.OrderItemStatus.CARD,
-        **get_order_item_creator_kwark_by_request(request),
+    service = OrderItemCartService(
+        session_key=request.session.session_key,
+        customer=request.user,
     )
-    manager = OrderItemCartManager(instance=cart_item)
-    manager.delete_cart()
 
+    service.delete_cart(item_id)
     # Check if this is an AJAX request
     if (
         request.headers.get("X-Requested-With") == "XMLHttpRequest"
         or request.content_type == "application/json"
     ):
-        cart_items = get_cart_queryset_by_request(request).select_related("product")
+        cart_items = service.get_valid_queryset().select_related("product")
 
         summary_price_context = make_new_summary_price_context(cart_items, serializable=True)
 
@@ -123,18 +107,18 @@ def cart_remove_view(request, item_id):
 
 def cart_update_view(request, item_id):
     """Update cart item quantity"""
+    service = OrderItemCartService(
+        session_key=request.session.session_key,
+        customer=request.user,
+    )
+
     if request.method == "POST":
-        cart_item = get_object_or_404(
-            OrderItem,
-            id=item_id,
-            status=OrderItem.OrderItemStatus.CARD,
-            **get_order_item_creator_kwark_by_request(request),
-        )
+
         quantity = int(request.POST.get("quantity", 1))
 
         try:
-            manager = OrderItemCartManager(instance=cart_item)
-            new_quantity = manager.update_quantity(quantity)
+
+            new_quantity = service.update_quantity(quantity)
 
             success = True
             error_message = None
@@ -150,7 +134,7 @@ def cart_update_view(request, item_id):
             request.headers.get("X-Requested-With") == "XMLHttpRequest"
             or request.content_type == "application/json"
         ):
-            cart_items = get_cart_queryset_by_request(request).select_related("product")
+            cart_items = service.get_valid_queryset().select_related("product")
 
             summary_price_context = make_new_summary_price_context(cart_items, serializable=True)
             summary_price_context.update(

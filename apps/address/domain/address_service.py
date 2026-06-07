@@ -1,20 +1,16 @@
-from apps.address.domain.schema import AddressSchema, CreateAddressSchema
 from apps.address.models import Address
+from apps.address.schemas import AddressSchema, CreateAddressSchema
 from apps.users.models import User
-from base.manager import BaseManager
+from base.manager import BaseService
 
 
-class AddressManagerException(Exception):
+class AddressServiceException(Exception):
     pass
 
 
-class AddressManager(BaseManager):
-    _class_schema = CreateAddressSchema
+class AddressService(BaseService):
     _read_class_schema = AddressSchema
     _class_model = Address
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     @classmethod
     def get_user_address_schemas(cls, user: User):
@@ -52,27 +48,6 @@ class AddressManager(BaseManager):
         instance = cls._class_model.objects.create(**data)
         cls._logger.info("Address created: %s", instance)
         return instance
-
-    @property
-    def instance(self):
-        if self._instance is None:
-            if self._instance_pk is not None:
-                self._instance = self._class_model.objects.get(pk=self._instance_pk)
-            elif self.schema is not None:
-                self._instance = self.get_or_create_address(self.schema)
-
-        return self._instance
-
-    def associate_with_user(self, user: User) -> None:
-        if self.instance is not None:
-            user.addresses.add(self.instance)
-            self._logger.info(
-                "User %s associated with Address: %s",
-                user,
-                self.instance,
-            )
-            return
-        self._logger.info("Address not found")
 
     @classmethod
     def _clean_schema_data(cls, schema: CreateAddressSchema) -> dict:

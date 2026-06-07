@@ -13,7 +13,21 @@ def get_upload_path(instance, filename):
     return f"products/{instance.id}/{filename}"
 
 
+class ProductManager(models.Manager):
+
+    def get_sale_queryset(self):
+        return super().filter(
+            is_active=True,
+            quantity__gt=0,
+        )
+
+    def get_sale_product_by_pk(self, pk: int):
+        return self.get_sale_queryset().filter(pk=pk).first()
+
+
 class Product(BaseModel, SlugMixin):
+    objects = ProductManager()
+
     class Meta:
         verbose_name = _("Товар")
         verbose_name_plural = _("Товары")

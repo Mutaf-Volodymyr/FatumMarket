@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ShowRoom - Fatum.Fit{% endblock %}
+
+{% block extra_css %}
+<style>
+    .showroom-page {
+        padding: var(--spacing-xl) 0;
+    }
+
+    .showroom-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid var(--color-border);
+        margin-bottom: var(--spacing-xl);
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .showroom-tabs::-webkit-scrollbar { display: none; }
+
+    .showroom-tab {
+        padding: var(--spacing-sm) var(--spacing-lg);
+        background: none;
+        border: none;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--color-text-light);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: var(--transition);
+    }
+    .showroom-tab:hover { color: var(--color-text); }
+    .showroom-tab.active {
+        color: var(--color-accent);
+        border-bottom-color: var(--color-accent);
+    }
+
+    .showroom-panel { display: none; }
+    .showroom-panel.active { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-xl); }
+
+    .showroom-info { display: flex; flex-direction: column; gap: var(--spacing-md); }
+
+    .showroom-photo {
+        width: 100%;
+        aspect-ratio: 4/3;
+        object-fit: cover;
+        border-radius: var(--border-radius);
+        background: var(--color-border);
+    }
+    .showroom-photo-placeholder {
+        width: 100%;
+        aspect-ratio: 4/3;
+        background: var(--color-border);
+        border-radius: var(--border-radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-text-light);
+        font-size: 0.9rem;
+    }
+
+    .showroom-address {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--color-text);
+        line-height: 1.4;
+    }
+    .showroom-address-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--color-text-light);
+        margin-bottom: 0.25rem;
+    }
+
+    .showroom-map {
+        width: 100%;
+        aspect-ratio: 4/3;
+        border: none;
+        border-radius: var(--border-radius);
+    }
+
+    .showroom-empty {
+        text-align: center;
+        padding: var(--spacing-xl) 0;
+        color: var(--color-text-light);
+    }
+
+    @media (max-width: 768px) {
+        .showroom-panel.active { grid-template-columns: 1fr; }
+        .showroom-tab { padding: var(--spacing-sm); font-size: 0.9rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container showroom-page">
+    <h1 class="page-title">ShowRoom</h1>
+
+    {% if showrooms %}
+        <div class="showroom-tabs" role="tablist">
+            {% for showroom in showrooms %}
+                <button
+                    class="showroom-tab {% if forloop.first %}active{% endif %}"
+                    role="tab"
+                    data-tab="showroom-{{ showroom.id }}"
+                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                >
+                    {{ showroom.address }}
+                </button>
+            {% endfor %}
+        </div>
+
+        {% for showroom in showrooms %}
+            <div
+                class="showroom-panel {% if forloop.first %}active{% endif %}"
+                id="showroom-{{ showroom.id }}"
+                role="tabpanel"
+            >
+                <div class="showroom-info">
+                    {% if showroom.image %}
+                        <img
+                            src="{{ showroom.image.url }}"
+                            alt="{{ showroom.address }}"
+                            class="showroom-photo"
+                            loading="lazy"
+                        >
+                    {% else %}
+                        <div class="showroom-photo-placeholder">Фото отсутствует</div>
+                    {% endif %}
+
+                    <div>
+                        <div class="showroom-address-label">Адрес</div>
+                        <div class="showroom-address">{{ showroom.address }}</div>
+                    </div>
+                </div>
+
+                <iframe
+                    class="showroom-map"
+                    src="https://yandex.ru/map-widget/v1/?text={{ showroom.address|urlencode }}&z=15"
+                    allowfullscreen
+                    loading="lazy"
+                    title="Карта {{ showroom.address }}"
+                ></iframe>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="showroom-empty">
+            <p>Шоурумы пока не добавлены</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.showroom-tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.showroom-tab').forEach(function(t) {
+                t.classList.remove('active');
+                t.setAttribute('aria-selected', 'false');
+            });
+            document.querySelectorAll('.showroom-panel').forEach(function(p) {
+                p.classList.remove('active');
+            });
+            tab.classList.add('active');
+            tab.setAttribute('aria-selected', 'true');
+            document.getElementById(tab.dataset.tab).classList.add('active');
+        });
+    });
+</script>
+{% endblock %}

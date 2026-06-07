@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Запись на примерку - Fatum.Fit{% endblock %}
+
+{% block extra_css %}
+<style>
+    .fitting-page { padding: var(--spacing-xl) 0; }
+
+    .fitting-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-xl); align-items: start; }
+
+    .fitting-form-section { position: sticky; top: calc(var(--navbar-height) + var(--spacing-md)); }
+
+    .fitting-form-title, .fitting-products-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-sm);
+        border-bottom: 2px solid var(--color-border);
+    }
+
+    .fitting-form { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.25rem; }
+    .form-group label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--color-text-light); }
+    .form-group input, .form-group select {
+        padding: 0.75rem var(--spacing-sm);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius);
+        font-size: 1rem;
+        width: 100%;
+        transition: var(--transition);
+    }
+    .form-group input:focus, .form-group select:focus {
+        outline: none;
+        border-color: var(--color-primary);
+    }
+
+    .fitting-submit {
+        margin-top: var(--spacing-sm);
+        padding: 1rem;
+        background: var(--color-accent);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    .fitting-submit:hover { opacity: 0.85; }
+    .fitting-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .fitting-items { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+
+    .fitting-item {
+        display: grid;
+        grid-template-columns: 80px 1fr auto;
+        gap: var(--spacing-sm);
+        align-items: center;
+        padding: var(--spacing-sm);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius);
+    }
+    .fitting-item-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: var(--border-radius);
+        background: var(--color-border);
+    }
+    .fitting-item-image-placeholder {
+        width: 80px;
+        height: 80px;
+        background: var(--color-border);
+        border-radius: var(--border-radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        color: var(--color-text-light);
+    }
+    .fitting-item-name {
+        font-weight: 500;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+    .fitting-item-remove {
+        background: none;
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius);
+        padding: 0.4rem 0.75rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        color: var(--color-text-light);
+        transition: var(--transition);
+        white-space: nowrap;
+    }
+    .fitting-item-remove:hover { border-color: var(--color-danger); color: var(--color-danger); }
+
+    .fitting-empty {
+        text-align: center;
+        padding: var(--spacing-xl) 0;
+        color: var(--color-text-light);
+    }
+    .fitting-empty a { color: var(--color-accent); text-decoration: none; }
+    .fitting-empty a:hover { text-decoration: underline; }
+
+    @media (max-width: 768px) {
+        .fitting-layout { grid-template-columns: 1fr; }
+        .fitting-form-section { position: static; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container fitting-page">
+    <h1 class="page-title">Запись на примерку</h1>
+
+    <div class="fitting-layout">
+
+        <div class="fitting-form-section">
+            <div class="fitting-form-title">Ваши данные</div>
+            <form method="post" class="fitting-form">
+                {% csrf_token %}
+
+                {% if showrooms %}
+                    <div class="form-group">
+                        <label for="show_room">Шоурум</label>
+                        <select name="show_room" id="show_room">
+                            <option value="">— Выберите шоурум —</option>
+                            {% for room in showrooms %}
+                                <option value="{{ room.id }}">{{ room.address }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label for="first_name">Имя</label>
+                    <input type="text" name="first_name" id="first_name"
+                           value="{% if user %}{{ user.first_name }}{% endif %}"
+                           placeholder="Введите имя" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="last_name">Фамилия</label>
+                    <input type="text" name="last_name" id="last_name"
+                           value="{% if user %}{{ user.last_name }}{% endif %}"
+                           placeholder="Введите фамилию">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Номер телефона *</label>
+                    <div class="phone-input-group">
+                        <select class="phone-prefix-select" aria-label="Код страны">
+                            <option value="+373">+373</option>
+                            <option value="+380">+380</option>
+                        </select>
+                        <input type="text" id="phone" class="phone-digits-input" inputmode="numeric" maxlength="12" placeholder="69123456" required>
+                        <input type="hidden" name="phone" class="phone-hidden-input" value="{% if user %}{{ user.phone }}{% endif %}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Желаемая дата примерки</label>
+                    <input type="datetime-local" name="date" id="date">
+                </div>
+
+                <button type="submit" class="fitting-submit" {% if not products %}disabled{% endif %}>
+                    Создать запись
+                </button>
+            </form>
+        </div>
+
+        <div class="fitting-products-section">
+            <div class="fitting-products-title">
+                Товары для примерки
+                {% if products %}({{ products|length }}){% endif %}
+            </div>
+
+            {% if products %}
+                <div class="fitting-items">
+                    {% for product in products %}
+                        <div class="fitting-item">
+                            {% if product.images.all %}
+                                <img src="{{ product.images.first.image.url }}"
+                                     alt="{{ product.full_name }}"
+                                     class="fitting-item-image"
+                                     loading="lazy">
+                            {% else %}
+                                <div class="fitting-item-image-placeholder">Нет фото</div>
+                            {% endif %}
+
+                            <a href="{% url 'market:product_detail' product.slug %}"
+                               class="fitting-item-name">
+                                {{ product.full_name }}
+                            </a>
+
+                            <form method="post" action="{% url 'market:fitting_remove' product.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="fitting-item-remove">Убрать</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="fitting-empty">
+                    <p>Вы ещё не добавили товары для примерки.</p>
+                    <p><a href="{% url 'market:home' %}">Перейти к товарам →</a></p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

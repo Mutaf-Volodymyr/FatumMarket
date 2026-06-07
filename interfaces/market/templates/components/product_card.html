@@ -43,12 +43,26 @@ Usage: {% include 'components/product_card.html' with product=product %}
         </div>
     </a>
 
-    <form method="post" action="{% url 'market:cart_add' product.id %}" class="product-card-form" data-product-id="{{ product.id }}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-block cart-button {% if product.in_cart %}btn-in-cart{% else %}btn-primary{% endif %}" data-product-id="{{ product.id }}">
-            {% if product.in_cart %}В корзине{% else %}Добавить в корзину{% endif %}
-        </button>
-    </form>
+    <div class="product-card-actions">
+        <div class="product-card-buttons">
+            {% if product.id in cart_product_ids %}
+                <a href="{% url 'market:cart' %}" class="btn btn-in-cart cart-button">В корзине</a>
+            {% else %}
+                <form method="post" action="{% url 'market:cart_add' product.id %}" class="product-card-form" data-product-id="{{ product.id }}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary cart-button" data-product-id="{{ product.id }}">В корзину</button>
+                </form>
+            {% endif %}
+            {% if product.id not in fitting_product_ids %}
+                <form method="post" action="{% url 'market:fitting_add' product.id %}" class="fitting-add-form" data-product-id="{{ product.id }}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary fitting-button" data-product-id="{{ product.id }}">Примерка</button>
+                </form>
+            {% else %}
+                <a href="{% url 'market:fitting' %}" class="btn btn-in-cart">В примерке</a>
+            {% endif %}
+        </div>
+    </div>
 
 </div>
 

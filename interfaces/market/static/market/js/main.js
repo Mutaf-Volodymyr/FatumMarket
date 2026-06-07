@@ -488,6 +488,75 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', handleSubmit);
     });
     
+    // AJAX fitting add functionality
+    const fittingUrl = document.querySelector('.navbar-link-fitting')?.href || '/fitting/';
+    const fittingForms = document.querySelectorAll('.fitting-add-form');
+    fittingForms.forEach(form => {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitButton = form.querySelector('button[type="submit"]');
+            const productId = form.dataset.productId;
+
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                });
+
+                if (!response.headers.get('content-type')?.includes('application/json')) {
+                    window.location.href = response.url || form.action;
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Update all fitting buttons for this product
+                    document.querySelectorAll(`.fitting-button[data-product-id="${productId}"]`).forEach(btn => {
+                        btn.textContent = 'В примерке';
+                        btn.classList.remove('btn-secondary');
+                        btn.classList.add('btn-in-cart');
+                        btn.disabled = false;
+                        btn.closest('form')?.addEventListener('submit', function(ev) {
+                            ev.preventDefault();
+                            window.location.href = fittingUrl;
+                        });
+                    });
+
+                    // Update fitting badge in navbar
+                    const fittingLink = document.querySelector('.navbar-link-fitting');
+                    if (fittingLink) {
+                        const fittingBadge = fittingLink.querySelector('.cart-badge');
+                        if (data.fitting_count > 0) {
+                            if (fittingBadge) {
+                                fittingBadge.textContent = data.fitting_count;
+                            } else {
+                                const badge = document.createElement('span');
+                                badge.className = 'cart-badge';
+                                badge.textContent = data.fitting_count;
+                                fittingLink.appendChild(badge);
+                            }
+                        }
+                    }
+                } else {
+                    showAlert(data.error || 'Ошибка при добавлении в примерку', 'error');
+                    if (submitButton) submitButton.disabled = false;
+                }
+            } catch (err) {
+                showAlert('Произошла ошибка при добавлении в примерку', 'error');
+                if (submitButton) submitButton.disabled = false;
+            }
+        });
+    });
+
     // AJAX cart quantity update functionality
     const quantityForms = document.querySelectorAll('.quantity-form');
     quantityForms.forEach(form => {
@@ -984,44 +1053,90 @@ document.addEventListener('DOMContentLoaded', function() {
         recalculateCartTotals();
     }
 
-    const courierForms = document.querySelectorAll('.courier-delivery-form');
-    if (courierForms.length > 0) {
-        function setCollapsibleStateSimple(element, isVisible, transitionMs = 280) {
-            if (!element) return;
-            element.setAttribute('aria-hidden', (!isVisible).toString());
-            if (isVisible) {
-                element.hidden = false;
-                requestAnimationFrame(() => {
-                    element.classList.add('is-visible');
-                });
-            } else {
-                element.classList.remove('is-visible');
-                window.setTimeout(() => {
-                    element.hidden = true;
-                }, transitionMs);
+    // Delivery type toggle (pickup / nova posta)
+    document.querySelectorAll('input[name="delivery_type"]').forEach(radio => {
+        radio.addEventListener('change', syncDeliveryForms);
+    });
+
+    function syncDeliveryForms() {
+        const selected = document.querySelector('input[name="delivery_type"]:checked');
+        const isPickup = selected?.value === 'pickup';
+        const isNovaPosta = selected?.value === 'nova_posta';
+
+        document.querySelectorAll('.pickup-delivery-form').forEach(el => { el.hidden = !isPickup; });
+        document.querySelectorAll('.nova-posta-delivery-form').forEach(el => { el.hidden = !isNovaPosta; });
+    }
+
+    syncDeliveryForms();
+
+    // Nova Posta sub-type toggle
+    document.querySelectorAll('input[name="nova_posta_type"]').forEach(radio => {
+        radio.addEventListener('change', syncNovaPostaForms);
+    });
+
+    function syncNovaPostaForms() {
+        const selected = document.querySelector('input[name="nova_posta_type"]:checked');
+        document.querySelectorAll('.nova-posta-sub-form').forEach(el => { el.hidden = true; });
+        if (selected) {
+            const map = {
+                post_office: 'npPostOfficeForm',
+                parcel_locker: 'npParcelLockerForm',
+                address: 'npAddressForm',
+            };
+            const formId = map[selected.value];
+            if (formId) {
+                const el = document.getElementById(formId);
+                if (el) el.hidden = false;
             }
         }
+    }
 
-        function syncCourierForms() {
-            courierForms.forEach(form => {
-                const container = form.closest('form') || document;
-                const selected = container.querySelector('input[name="delivery_type"]:checked');
-                const isCourier = selected?.value === 'courier';
-                const isNovaPost = selected?.value === 'nova-posta';
-                setCollapsibleStateSimple(form, isCourier);
-                form.querySelectorAll('[data-courier-required]').forEach(field => {
-                    if (isCourier || isNovaPost) {
-                        field.setAttribute('required', 'required');
-                    } else {
-                        field.removeAttribute('required');
-                    }
-                });
-            });
+    syncNovaPostaForms();
+
+    // Phone input: prefix select + digits only
+    function initPhoneInput(wrapper) {
+        const prefixSelect = wrapper.querySelector('.phone-prefix-select');
+        const digitsInput = wrapper.querySelector('.phone-digits-input');
+        const hiddenInput = wrapper.querySelector('.phone-hidden-input');
+        if (!prefixSelect || !digitsInput || !hiddenInput) return;
+
+        const prefixes = ['+373', '+380'];
+        const existing = hiddenInput.value || '';
+        let matchedPrefix = '+373';
+        let digits = existing;
+        for (const p of prefixes) {
+            if (existing.startsWith(p)) {
+                matchedPrefix = p;
+                digits = existing.slice(p.length);
+                break;
+            }
+        }
+        prefixSelect.value = matchedPrefix;
+        digitsInput.value = digits;
+
+        function update() {
+            hiddenInput.value = prefixSelect.value + digitsInput.value;
         }
 
-        document.querySelectorAll('input[name="delivery_type"]').forEach(radio => {
-            radio.addEventListener('change', syncCourierForms);
+        digitsInput.addEventListener('input', () => {
+            digitsInput.value = digitsInput.value.replace(/\D/g, '');
+            update();
         });
-        syncCourierForms();
+        prefixSelect.addEventListener('change', update);
+        update();
     }
+
+    document.querySelectorAll('.phone-input-group').forEach(initPhoneInput);
+
+    // Char counter for comment textareas
+    document.querySelectorAll('.comment-textarea').forEach(textarea => {
+        const counter = textarea.nextElementSibling;
+        if (!counter) return;
+        const max = textarea.maxLength;
+        textarea.addEventListener('input', () => {
+            const len = textarea.value.length;
+            counter.textContent = `${len} / ${max}`;
+            counter.classList.toggle('char-counter--near-limit', len >= max * 0.9);
+        });
+    });
 });
